@@ -15,10 +15,19 @@ l'intelligence artificielle, pas le confort d'un joueur humain.
 |---|---|
 | `config/` | `select_tournoi.def` (le menu du tournoi), `mugen.cfg` (réglages moteur et mémoire) |
 | `outils/` | Scripts d'équilibrage et de vérification, en Python |
-| `docs/` | Liste du roster et recherches de remplaçants |
+| `docs/` | Roster, recherches de remplaçants, et les diagnostics détaillés |
 
 **Ne sont pas versionnés** : les fichiers de personnages (sprites, sons), beaucoup trop lourds —
 le pack complet dépasse 8 Go.
+
+### Documents
+
+| Fichier | Sujet |
+|---|---|
+| [`docs/SPRITES_NOIRS.md`](docs/SPRITES_NOIRS.md) | Pourquoi certains sprites et effets s'affichent en noir, et comment le mesurer |
+| [`docs/GOD_CHARACTERS.md`](docs/GOD_CHARACTERS.md) | Quand l'équilibrage par les stats ne suffit pas — cas Solid Snake |
+| [`docs/REMPLACANTS_A_TELECHARGER.md`](docs/REMPLACANTS_A_TELECHARGER.md) | Recherche de meilleures versions pour les personnages faibles |
+| [`docs/ROSTER_TOURNOI.md`](docs/ROSTER_TOURNOI.md) | La liste des 75 |
 
 ---
 
@@ -77,12 +86,20 @@ Trigger not valid for mugenversion of character: AILevel
 | Écriture moderne | Équivalent pré-1.0 |
 |---|---|
 | `/1.5` | 533 |
+| `/1.6` | 500 |
 | `/2` | 400 |
 | `/3` | 267 |
 | `/4` | 200 |
+| `/6` | 133 |
 | `/8` | 100 |
 
-13 personnages du roster sont concernés.
+**Mieux encore** : plutôt que de forcer `mugenversion = 1.0`, garder la version déclarée par
+l'auteur et activer le bloc sur **le propre drapeau d'IA du personnage** — `var(58) = 1` chez
+Bowser (K.Y-Shanxi), `var(59) != 0` chez Master Hand (N64Mario). Le bloc ne se déclenche alors
+que quand l'IA d'origine est active, et aucun trigger moderne n'entre dans un fichier ancien.
+
+> `mugenversion` peut valoir une date non standard (`2011.05.14`). Dans le doute, traiter comme
+> pré-1.0 : les valeurs directes ne coûtent rien et ne peuvent pas planter.
 
 ### 2. Ne jamais créer de statedef négatif
 
@@ -95,6 +112,10 @@ absents, transformations bloquées. Toujours insérer dans le statedef qui exist
 Ordre de chargement MUGEN : `cns`/`st`, puis `st1`…`stN`, puis **`stcommon` en dernier**.
 Le `stcommon` gagne donc en cas de conflit.
 
+**Où insérer un bloc** : après le `[Statedef -1]`, mais **avant le premier contrôleur de type
+`ChangeState`**. Cela respecte la règle « le premier ChangeState gagne » tout en laissant
+s'exécuter les `VarSet` d'activation d'IA placés en tête.
+
 ### 3. Pièges d'analyse des fichiers
 
 - Les en-têtes s'écrivent `[Statedef 200]` **ou** `[Statedef 200, nom du coup]`.
@@ -103,18 +124,47 @@ Le `stcommon` gagne donc en cas de conflit.
 - Les valeurs du `.def` peuvent contenir des espaces en fin de ligne et des antislash Windows.
 - Les dossiers `OP/`, `Nerf/`, `1.0/` sont des variantes que MUGEN **ne charge jamais**.
 - Les fichiers de personnages s'écrivent en **latin-1**, jamais en UTF-8.
+- **Le nom du dossier n'est pas toujours le nom du `.def`.** Écrire `MonPerso` dans `select.def`
+  fait chercher `chars/MonPerso/MonPerso.def`. Cas rencontrés : `Metal Sonic` (→ `MetalSonic.def`)
+  et `Emerl (2)` (→ `Emerl.def`). Dans le doute, écrire `Dossier/fichier.def`.
+- **Un dossier peut contenir plusieurs `.def`** : une version nue et une version avec patch d'IA.
+  `Vector_Gladiacloud` a `vector.def` (sans IA) et `AI-vector.def` (avec). Pointer le mauvais
+  annule tout l'intérêt du personnage.
+- **Le nom d'un dossier ne prouve rien sur son contenu** : toujours lire le champ `author` du `.def`.
+- Des commandes `cpu1`..`cpu10` déclarées dans le `.cmd` ne prouvent **pas** qu'une IA existe :
+  vérifier que le `.cns` lit vraiment le var d'activation.
 
-### 4. Mémoire
+### 4. Mémoire, et sprites noirs — deux problèmes distincts
 
-MUGEN 1.1 est en 32 bits. Le menu complet chargeait 1663 personnages au démarrage — MUGEN ouvre
-le fichier de sprites de chacun pour lire son portrait, ce qui saturait la mémoire avant même
-qu'un combat commence.
+> **Correction du 26/07.** Ce dépôt affirmait auparavant que les sprites noirs venaient de la
+> saturation mémoire. C'était faux, ou du moins incomplet.
 
-D'où le menu réduit à 75 personnages, devenu le menu par défaut. Réglages associés dans
-`mugen.cfg` : `PlayerCache = 0`, `Precache = 0`, `BufferedRead = 0`, `UnloadSystem = 1`.
+**Mémoire.** MUGEN 1.1 est en 32 bits. Le menu complet chargeait 1663 personnages au démarrage —
+MUGEN ouvre le fichier de sprites de chacun pour lire son portrait, ce qui saturait la mémoire
+avant même qu'un combat commence. D'où le menu réduit à 75 personnages, devenu le menu par défaut.
+Réglages associés : `PlayerCache = 0`, `Precache = 0`, `BufferedRead = 0`, `UnloadSystem = 1`.
 
-> Quand MUGEN manque de mémoire, des sprites échouent au chargement et **s'affichent en noir**.
-> Ce symptôme a longtemps été pris pour un problème de palette.
+**Sprites noirs.** La vraie cause est écrite dans `mugen.cfg` lui-même :
+
+> `System and DirectX modes do not support advanced features such as RGB sprites`
+
+Un sprite RGB 32 bits affiché en `RenderMode = System` **sort noir**. Idem pour une surface trop
+grande, qui échoue silencieusement à l'allocation. 21 des 75 personnages du roster sont concernés.
+
+→ `RenderMode = OpenGL`. Détail complet et méthode de mesure dans
+[`docs/SPRITES_NOIRS.md`](docs/SPRITES_NOIRS.md).
+
+### 5. Les stats ne pilotent pas tout
+
+Quand un personnage reste écrasant après un ajustement de stats, chercher :
+
+- `TargetLifeAdd` — retire de la vie **directement**, sans passer par `attack` ni `defence`
+- des dégâts exprimés en pourcentage de `enemy,lifemax`
+- le **second paramètre** de `damage` — les dégâts sur garde, parfois absurdes
+- `ReversalDef` couvrant tous les attributs d'attaque
+- un mode caché activé sur les palettes 11 et 12
+
+Cas complet dans [`docs/GOD_CHARACTERS.md`](docs/GOD_CHARACTERS.md).
 
 ---
 
@@ -128,3 +178,23 @@ Une base SQLite (`roster_tournoi.db`) conserve l'état du roster et l'historique
 
 Un contrôle automatique tourne chaque dimanche : il mesure les 75, enregistre en base et
 **compare à la semaine précédente** pour détecter les régressions.
+
+---
+
+## Journal
+
+### 26 juillet 2026
+
+- **4 remplacements** : Kirby → OHMSBY + patch IA Holn · Master Hand → N64Mario ·
+  Bowser → K.Y-Shanxi · Vector → Gladiacloud + patch IA. Stats, garde M2 et anti-coin M6 appliqués.
+- **Sprites noirs** : cause trouvée (`RenderMode = System` ne gère pas les sprites RGB),
+  bascule en OpenGL.
+- **Solid Snake** : ses dégâts montaient avec la vie max et la défense de sa cible (×4,12 contre
+  un T0). Formule retirée sur 66 lignes, dégâts et chip plafonnés, morts instantanées bornées.
+- Références orphelines réparées dans les deux menus, encodage latin-1 rétabli,
+  `Emerl (2)` corrigé.
+
+### Avant
+
+- Refonte Lore-Accurate des 75, système anti-coin M6, profils de garde M2,
+  base SQLite et contrôle hebdomadaire, menu tournoi séparé du menu complet.
