@@ -55,6 +55,18 @@ contenu MUGEN dans une branche `mods`). Si elle trouve un débordement dans **se
 branches, elle le corrige. Si le débordement est dans les branches d'une autre IA, elle
 le signale à On-100-K-Lisse au lieu de le modifier elle-même.
 
+### Règle 3 — Toujours créditer les auteurs
+
+Tout contenu qui n'a pas été créé par On-100-K-Lisse doit créditer son auteur : personnages,
+œuvres, images, extraits, code, mods, outils et travaux externes. Quand l'auteur est
+connu, il faut le nommer clairement. Si l'auteur ou la source exacte est inconnue, il
+faut le mentionner plutôt que de laisser croire que le contenu appartient à On-100-K-Lisse
+ou à une IA du projet.
+
+Exemple : les personnages MUGEN doivent être crédités à leurs auteurs et créateurs
+d'origine. La documentation du tournoi porte sur la configuration, l'équilibrage et les
+tests effectués ici — pas sur la création ou la propriété des personnages.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
