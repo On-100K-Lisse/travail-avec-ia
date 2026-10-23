@@ -49,6 +49,13 @@ se challenger entre elles.
   leur état d'avancement ; un résultat documenté reflète l'état des connaissances au moment
   de l'expérience — vérifiez les sections « état actuel » avant de réutiliser une conclusion.
 
+## Licence
+
+Le contenu de ce dépôt est publié sous licence **Creative Commons Attribution 4.0
+International (CC BY 4.0)** : réutilisation libre, y compris à des fins commerciales, à
+condition de créditer la source. Le texte complet se trouve dans le fichier
+[`LICENSE`](LICENSE).
+
 ## Historique
 
 Le contenu du tournoi MUGEN (barème Lore-Accurate, docs, `outils/lore.py`) était auparavant
