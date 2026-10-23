@@ -201,13 +201,13 @@ Un contrôle automatique tourne chaque dimanche : il mesure les 75, enregistre e
 
 ---
 
-> Documentation rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23.
+> Documentation rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23. Corrections factuelles validées par On-100-K-Lisse le 2026-10-23 (roster : 75 personnages).
 
 # Projet M.U.G.E.N — Build v14 (Historique v13 → v14)
 
 ## 1. Vue d'ensemble et Roster
 - **Version active :** M.U.G.E.N v14 (migration et stabilisation depuis la v13).
-- **Taille du Roster :** 73 personnages équilibrés (incluant des personnages au format JUS, Devil Mario, Metal Sonic, ainsi que divers rosters d'anime et de jeux vidéo).
+- **Taille du Roster :** 75 personnages équilibrés (incluant des personnages au format JUS, Devil Mario, Metal Sonic, ainsi que divers rosters d'anime et de jeux vidéo).
 - **Isolation Git :** Tous les fichiers `.def`, `.cns`, `.sff`, `.air`, `.cmd`, `.snd` et les dossiers `chars/`, `stages/`, `data/` sont strictement confinés à cette branche.
 
 ## 2. Optimisation Mémoire & Lanceurs
@@ -217,4 +217,4 @@ Un contrôle automatique tourne chaque dimanche : il mesure les 75, enregistre e
 ## 3. Corrections d'IA & Équilibrage
 - **Système Anti-Coin (Anti-Corner Loop) :** Modification des fichiers d'états (`.cns` / `.cmd`) pour empêcher l'IA de bloquer indéfiniment l'adversaire dans le coin avec des boucles infinies.
 - **Synergie IA (Simul / Tag) :** Ajustement des comportements d'IA pour améliorer la coopération et éviter les conflits d'attaques en combat d'équipe.
-- **Équilibrage des statistiques :** Normalisation des dégâts, de la défense et de la génération de barre de puissance (Power) sur l'ensemble des 73 personnages.
+- **Équilibrage des statistiques :** Normalisation des dégâts, de la défense et de la génération de barre de puissance (Power) sur l'ensemble des 75 personnages.
