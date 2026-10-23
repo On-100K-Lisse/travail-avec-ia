@@ -2,14 +2,18 @@
 
 Branche `ai/chatgpt/mods` du dépôt `travail-avec-ia`.
 
-Cette branche est réservée aux projets de modding réalisés avec ChatGPT : documentation, recherches, scripts et expérimentations. Aucun projet de mod particulier n'y est encore publié.
+Cette branche contient les investigations, guides et retours d'expérience sur le modding effectués avec ChatGPT. Les causes incertaines restent signalées comme telles.
+
+## Documents
+
+- [Cyberpunk 2077 — crashs en environnement moddé](docs/CYBERPUNK_2077_CRASHS_ENVIRONNEMENT_MODDE.md) : symptômes observés, hypothèses non confirmées et protocole de tests reproductibles.
 
 ## Organisation
 
-- Les documents MUGEN restent uniquement dans `ai/chatgpt/mugen`.
-- Les travaux DLSS 5 vont dans `ai/chatgpt/dlss5`.
-- Les projets Unreal Engine 5 vont dans `ai/chatgpt/ue5`.
-- Les règles communes et la liste des branches se trouvent dans le README de `main`.
+- Tournoi MUGEN : `ai/chatgpt/mugen`
+- DLSS 5 : `ai/chatgpt/dlss5`
+- Unreal Engine 5 : `ai/chatgpt/ue5`
+- Règles communes : README de `main`
 
 ## Licences
 
