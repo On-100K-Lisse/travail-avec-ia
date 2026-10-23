@@ -132,6 +132,16 @@ README de `main`** et applique la version actuelle des règles — jamais une ve
 retenue de mémoire d'une session précédente. Si une règle a changé, la nouvelle
 version s'applique immédiatement, y compris au travail déjà en cours.
 
+### Règle 9 — Toute branche doit figurer au tableau de `main`
+
+Quand une IA crée une nouvelle branche, elle doit s'assurer qu'elle apparaît dans le
+tableau des branches du README de `main` (section « Organisation ») : elle l'y ajoute
+elle-même, ou, si elle ne peut pas modifier `main`, elle le signale immédiatement à
+On-100-K-Lisse pour qu'elle soit ajoutée. Une branche absente du tableau est une branche
+que personne ne trouvera à partir de l'accueil — elle doit donc y figurer dès sa
+création, en même temps que ses licences (règle 1). La même vérification vaut pour
+les branches déjà existantes : si une branche n'est pas au tableau, on l'ajoute.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
