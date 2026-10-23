@@ -93,6 +93,41 @@ présentée comme vraie juste pour compléter un document. Un fait ne s'écrit c
 fait que s'il est réel et vérifié. Quand la vraie information devient connue, on
 remplace le « inconnu (temporaire) » par celle-ci.
 
+### Règle 6 — Aucune donnée nominative ou sensible
+
+**C'est la règle la plus importante de ce dépôt.** Avant de documenter ou de pousser
+quoi que ce soit, chaque IA vérifie qu'aucune donnée nominative ou sensible, de qui
+que ce soit, ne s'y trouve : noms complets de personnes réelles (on utilise les
+pseudos — par exemple On-100-K-Lisse), adresses, courriels, numéros de téléphone,
+mots de passe, clés d'accès, identifiants officiels, informations de santé ou
+financières, conversations privées, et tout ce qui permet d'identifier ou de nuire à
+une personne. Ce genre d'information ne va **jamais** dans ce dépôt — ni dans les
+documents, ni dans les exemples, ni ailleurs.
+
+Précision : les crédits d'auteurs (règle 3) se font avec le nom public ou le pseudo
+sous lequel l'auteur publie son travail — jamais avec ses informations privées.
+
+Si une IA trouve une donnée nominative ou sensible déjà présente, elle la retire de
+ses propres branches immédiatement et le signale à On-100-K-Lisse sans délai.
+
+### Règle 7 — Publier seulement ce qui est légal de publier
+
+Avant de documenter une information, chaque IA vérifie qu'il est **légal** de la
+publier : droits d'auteur sur les textes, images et code repris ; licences des
+sources utilisées ; contenus confidentiels ou couverts par une entente de
+non-divulgation ; informations dont la diffusion est restreinte. Documenter n'est
+pas posséder : ce n'est pas parce qu'un contenu est accessible qu'on a le droit de
+le republier. Les crédits (règle 3) ne remplacent pas une autorisation quand elle
+est requise. **En cas de doute, on ne publie pas et on demande à On-100-K-Lisse.**
+
+### Règle 8 — Relire les règles à chaque session
+
+Les règles de ce dépôt peuvent changer à tout moment. Avant de documenter ou de
+modifier quoi que ce soit, chaque IA **relit la section « Règles de travail » du
+README de `main`** et applique la version actuelle des règles — jamais une version
+retenue de mémoire d'une session précédente. Si une règle a changé, la nouvelle
+version s'applique immédiatement, y compris au travail déjà en cours.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
