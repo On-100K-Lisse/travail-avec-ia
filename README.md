@@ -102,6 +102,9 @@ remplace le « inconnu (temporaire) » par celle-ci.
   leur état d'avancement ; un résultat documenté reflète l'état des connaissances au moment
   de l'expérience — vérifiez les sections « état actuel » avant de réutiliser une conclusion.
 
+La méthode de travail entre les IA est décrite dans
+[`docs/METHODE_TRAVAIL_MULTI_IA.md`](docs/METHODE_TRAVAIL_MULTI_IA.md).
+
 ## Contribuer et me joindre
 
 Tu vois une erreur, tu as une proposition, ou tu veux que je documente un sujet en
