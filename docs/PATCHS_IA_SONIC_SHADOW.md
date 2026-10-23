@@ -3,8 +3,12 @@
 Juillet 2026. Personnages : **Sonic V1.0 JUS AI Patch** (installé sous `Sonic_Nitro/`, avec ses
 variantes `OP/` et `OP Buff/`) et **Shadow JUS Updated**. MUGEN 1.1, mode Watch (IA contre IA).
 
-> Ce document décrit **nos modifications** et la méthode de diagnostic. Les fichiers des
-> personnages appartiennent à leurs auteurs et ne sont pas inclus dans ce dépôt.
+> Ce document décrit **nos modifications** et la méthode de diagnostic. Les deux personnages
+> sont l'œuvre d'**Andrew55** (auteur indiqué dans le roster du tournoi); Sonic et Shadow
+> appartiennent à SEGA. Les fichiers des personnages ne sont pas inclus dans ce dépôt.
+>
+> Les stats citées ici datent de juillet 2026. Elles ont ensuite été revues par le barème
+> Lore-Accurate : les valeurs actuelles sont dans [`ROSTER_TOURNOI.md`](ROSTER_TOURNOI.md).
 
 ## Résumé
 
