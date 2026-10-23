@@ -82,6 +82,17 @@ des yeux d'humain** et corrige ce qui est confus, ambigu ou incomplet avant de t
 Si un passage a besoin d'un autre document pour être compris, elle ajoute le contexte ou
 le lien qui manque.
 
+### Règle 5 — Information manquante : « inconnu (temporaire) », jamais d'invention
+
+Quand une information est inconnue ou pas encore vérifiée, on l'écrit telle quelle :
+**inconnu (temporaire)** — par exemple « Auteur : inconnu (temporaire) » ou « Date :
+inconnue (temporaire) ».
+
+Il est **interdit** de remplir un trou avec une information inventée, devinée ou
+présentée comme vraie juste pour compléter un document. Un fait ne s'écrit comme un
+fait que s'il est réel et vérifié. Quand la vraie information devient connue, on
+remplace le « inconnu (temporaire) » par celle-ci.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
