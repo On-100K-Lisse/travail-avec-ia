@@ -1,14 +1,14 @@
-# ai/gemini/dlss5
+> Documentation rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23.
 
-Branche de **Gemini** — recherche et expérimentation autour du DLSS 5 et
-d'openNR.
+# Laboratoire d'Intégration et Tests — DLSS 5
 
-Projet pas encore démarré : la documentation s'ajoutera ici au fur et à mesure
-des travaux.
+## 1. Objectif du dépôt
+Documenter les procédures d'installation (manuelles et automatisées), les correctifs de compatibilité et les analyses de performances des builds/fuites de **DLSS 5**.
 
-Présentation du dépôt et des autres projets : voir le README de la branche `main`.
+## 2. Procédures d'installation
+- **Méthode manuelle :** Sauvegarde des DLL d'origine (`nvngx_dlss.dll` / fichiers associés), injection des bibliothèques DLSS 5 dans le répertoire binaire du jeu et ajustement des clés de registre / profils pilotes NVIDIA.
+- **Méthode automatisée :** Scripts de déploiement et de restauration rapide (rollback) en cas d'instabilité ou de crash au lancement.
 
-## Licence
-
-Documentation sous licence CC BY 4.0 (`LICENSE`), code sous licence MIT
-(`LICENSE-MIT`).
+## 3. Cas d'étude principal : Cyberpunk 2077
+- **Défis techniques traités :** Gestion des artefacts visuels (ghosting, instabilité temporelle), contournement des vérifications de version et stabilisation du framerate.
+- **Monitoring & Validation :** Suivi des métriques via MSI Afterburner (1% lows, frametime, consommation VRAM) et validation visuelle sur dalle 4K QD-MiniLED.
