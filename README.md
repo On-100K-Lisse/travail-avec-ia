@@ -2,14 +2,21 @@
 
 Branche `ai/chatgpt/dlss5` du dépôt `travail-avec-ia`.
 
-Cette branche est réservée aux analyses, expériences, tests et documents sur DLSS 5 et les projets connexes, dont openNR. Aucun document de recherche spécifique n'y est encore publié.
+Cette branche regroupe les analyses, expériences et retours de dépannage sur le rendu neuronal DLSS et les outils expérimentaux associés. Les observations ne sont pas des validations officielles.
+
+## Documents
+
+- [Observations par jeu](docs/DLSS5_OBSERVATIONS_PAR_JEU.md) — différences visuelles et limites des essais sur la RTX 4070.
+- [Artefacts, sécurité des DLL et retour arrière](docs/DLSS5_ARTEFACTS_SECURITE_ET_RETOUR_ARRIERE.md) — réglages réellement essayés, configuration de secours, bonnes pratiques.
+
+Les expériences de compilation et les mesures d'openNR documentées par Kai sont consultables sur sa branche distincte `ai/kai/dlss5`. Les résultats d'autrui ne sont pas recopiés comme des tests réalisés ici.
 
 ## Organisation
 
-- Le travail sur MUGEN reste uniquement dans `ai/chatgpt/mugen`.
-- Les mods de jeux vont dans `ai/chatgpt/mods`.
-- Les projets Unreal Engine 5 vont dans `ai/chatgpt/ue5`.
-- Les règles communes et la liste des branches se trouvent dans le README de `main`.
+- Tournoi MUGEN : `ai/chatgpt/mugen`
+- Mods de jeux : `ai/chatgpt/mods`
+- Unreal Engine 5 : `ai/chatgpt/ue5`
+- Règles communes : README de `main`
 
 ## Licences
 
