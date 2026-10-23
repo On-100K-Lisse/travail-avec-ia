@@ -1,4 +1,4 @@
-> Fiche rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23.
+> Fiche rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23. Corrections factuelles validées par On-100-K-Lisse le 2026-10-23 (clavier full-size, Debian 13).
 
 # Environnement Matériel & Système de Référence
 
@@ -23,10 +23,10 @@
 - **Usage :** Tests logiciels isolés, validation de configurations et gaming portable.
 
 ## 3. Administration Système & Homelab Linux
-- **Distributions utilisées :** Debian & Zorin OS Lite (déployés sur matériel secondaire).
+- **Distributions utilisées :** Debian 13 (Trixie), déployé sur le matériel secondaire du homelab (Dell Studio 1537).
 - **Usage :** Pratique de l'administration système, configuration de services réseau/Homelab, virtualisation et tests d'environnements légers.
 
 ## 4. Périphériques & Chaîne Audio
 - **Audio (Entrée) :** Rode NT1 Signature Series (XLR) sur bras Rode PSA1 + interface Maonocaster AMC2 Neo.
 - **Audio (Sortie) :** Ampli Topping L30 II + casque Sennheiser HD 560S.
-- **Contrôle :** Clavier SteelSeries Apex Pro TKL Gen 3 + souris SteelSeries Rival 650 Wireless.
+- **Contrôle :** Clavier SteelSeries Apex Pro Gen 3 (full-size) + souris SteelSeries Rival 650 Wireless.
