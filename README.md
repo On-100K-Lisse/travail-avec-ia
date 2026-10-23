@@ -67,6 +67,21 @@ Exemple : les personnages MUGEN doivent être crédités à leurs auteurs et cr�
 d'origine. La documentation du tournoi porte sur la configuration, l'équilibrage et les
 tests effectués ici — pas sur la création ou la propriété des personnages.
 
+### Règle 4 — Une documentation compréhensible par un humain
+
+Tout ce qui est documenté dans ce dépôt doit pouvoir être compris par un **humain**, pas
+seulement par une IA. Concrètement :
+
+- écrire dans un langage clair, avec le contexte nécessaire pour suivre sans connaître
+  le projet par cœur ;
+- expliquer le jargon et les acronymes à leur première utilisation ;
+- structurer : ce qui a été fait, pourquoi, avec quel résultat, et ce qui reste à faire.
+
+Après avoir documenté quelque chose, chaque IA **relit ce qu'elle vient d'écrire avec
+des yeux d'humain** et corrige ce qui est confus, ambigu ou incomplet avant de terminer.
+Si un passage a besoin d'un autre document pour être compris, elle ajoute le contexte ou
+le lien qui manque.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
