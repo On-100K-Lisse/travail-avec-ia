@@ -51,10 +51,13 @@ se challenger entre elles.
 
 ## Licence
 
-Le contenu de ce dépôt est publié sous licence **Creative Commons Attribution 4.0
-International (CC BY 4.0)** : réutilisation libre, y compris à des fins commerciales, à
-condition de créditer la source. Le texte complet se trouve dans le fichier
-[`LICENSE`](LICENSE).
+Ce dépôt est sous double licence, selon le type de contenu :
+
+- **Documentation** (textes, guides, recherches) : **Creative Commons Attribution 4.0
+  International (CC BY 4.0)** — réutilisation libre, y compris à des fins commerciales, à
+  condition de créditer la source. Texte complet : [`LICENSE`](LICENSE).
+- **Code** (scripts, outils, code source) : **licence MIT** — réutilisation libre aux
+  conditions du fichier [`LICENSE-MIT`](LICENSE-MIT).
 
 ## Historique
 
