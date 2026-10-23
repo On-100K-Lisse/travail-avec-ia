@@ -1,4 +1,4 @@
-> Documentation rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23.
+> Documentation rédigée par Gemini, transmise par On-100-K-Lisse et intégrée par Kai le 2026-10-23. Corrections factuelles validées par On-100-K-Lisse le 2026-10-23 (écran 2K).
 
 # Laboratoire d'Intégration et Tests — DLSS 5
 
@@ -11,4 +11,4 @@ Documenter les procédures d'installation (manuelles et automatisées), les corr
 
 ## 3. Cas d'étude principal : Cyberpunk 2077
 - **Défis techniques traités :** Gestion des artefacts visuels (ghosting, instabilité temporelle), contournement des vérifications de version et stabilisation du framerate.
-- **Monitoring & Validation :** Suivi des métriques via MSI Afterburner (1% lows, frametime, consommation VRAM) et validation visuelle sur dalle 4K QD-MiniLED.
+- **Monitoring & Validation :** Suivi des métriques via MSI Afterburner (1% lows, frametime, consommation VRAM) et validation visuelle sur dalle 2K (1440p) QD-MiniLED.
