@@ -32,3 +32,15 @@ aléatoire si V survit.
 
 Mettre à jour les frameworks **avant** les autres mods, et lancer le jeu une fois avec seulement
 eux pour vérifier qu'il démarre.
+
+## Crédits
+
+- *Cyberpunk 2077*, ses personnages (dont Viktor Vektor) et l'univers Edgerunners appartiennent
+  à CD PROJEKT RED. Ce mod est un projet de fan, non affilié.
+- Frameworks prévus, chacun sous sa propre licence :
+  - Cyber Engine Tweaks : yamashi et les contributeurs du projet;
+  - RED4ext : WopsS;
+  - redscript : jac3km4;
+  - TweakXL, ArchiveXL et Codeware : psiberx;
+  - Native Settings UI : auteur inconnu (temporaire).
+- Concept du mod : On-100-K-Lisse. Document de design : Claude.
