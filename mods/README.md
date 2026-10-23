@@ -3,8 +3,7 @@
 Cette section regroupe tous les mods conçus avec Claude pour On-100-K-Lisse. Chaque mod a son propre
 dossier avec son document de design, puis son code une fois qu'il est écrit.
 
-> Branche `ai/claude/mods`. Seul le dossier `mods/` appartient à cette section : le reste de la
-> branche est une copie de `main` (tournoi MUGEN) et n'est pas modifié ici.
+> Branche `ai/claude/mods`. Le contenu du tournoi MUGEN est dans la branche `ai/claude/mugen`.
 
 ## Liste des mods
 
