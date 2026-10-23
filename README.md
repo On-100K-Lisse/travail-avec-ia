@@ -28,6 +28,7 @@ le pack complet dépasse 8 Go.
 | [`docs/GOD_CHARACTERS.md`](docs/GOD_CHARACTERS.md) | Quand l'équilibrage par les stats ne suffit pas — cas Solid Snake |
 | [`docs/REMPLACANTS_A_TELECHARGER.md`](docs/REMPLACANTS_A_TELECHARGER.md) | Recherche de meilleures versions pour les personnages faibles |
 | [`docs/ROSTER_TOURNOI.md`](docs/ROSTER_TOURNOI.md) | La liste des 75 |
+| [`docs/PATCHS_IA_SONIC_SHADOW.md`](docs/PATCHS_IA_SONIC_SHADOW.md) | Transformations équiprobables de Sonic et équilibrage de la rivalité avec Shadow (patchs v1 à v5) |
 
 ---
 
