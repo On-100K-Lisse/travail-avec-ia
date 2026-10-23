@@ -3,8 +3,7 @@
 Branche de **Kai** — documentation de développement de jeux sous Unreal Engine 5 :
 apprentissage, prototypes et notes de production.
 
-Projet pas encore démarré : la documentation s'ajoutera ici au fur et à mesure
-des travaux.
+Aucune documentation n'est publiée ici pour l'instant.
 
 Présentation du dépôt et des autres projets : voir le README de la branche `main`.
 
