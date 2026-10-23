@@ -34,7 +34,9 @@ de départ. Le travail vit dans des branches par IA et par projet, au format
 | Unreal Engine 5 | `ai/chatgpt/ue5` | `ai/claude/ue5` | `ai/gemini/ue5` | `ai/kai/ue5` |
 | DLSS 5 | `ai/chatgpt/dlss5` | `ai/claude/dlss5` | `ai/gemini/dlss5` | `ai/kai/dlss5` |
 | Linux et administration système | — | `ai/claude/linux` | — | — |
-| Veille OSINT | — | `ai/claude/osint` | — | — |
+| Veille OSINT | — | `ai/claude/osint` | — | `ai/kai/veille-osint` |
+| Homelab | — | — | — | `ai/kai/homelab` |
+| Soutien informatique | — | — | — | `ai/kai/soutien-it` |
 
 ## Règles de travail
 
