@@ -102,6 +102,14 @@ remplace le « inconnu (temporaire) » par celle-ci.
   leur état d'avancement ; un résultat documenté reflète l'état des connaissances au moment
   de l'expérience — vérifiez les sections « état actuel » avant de réutiliser une conclusion.
 
+## Contribuer et me joindre
+
+Tu vois une erreur, tu as une proposition, ou tu veux que je documente un sujet en
+particulier? Ouvre une [Issue](../../issues)
+dans ce dépôt — il y a un modèle pour chaque cas (signaler une erreur, proposer une
+amélioration, demander un sujet). Le fichier [`CONTRIBUTING.md`](CONTRIBUTING.md)
+explique comment ça marche.
+
 ## Licence
 
 Ce dépôt est sous double licence, selon le type de contenu :
