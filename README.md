@@ -34,11 +34,26 @@ de départ. Le travail vit dans des branches par IA et par projet, au format
 | Unreal Engine 5 | `ai/chatgpt/ue5` | `ai/claude/ue5` | `ai/gemini/ue5` | `ai/kai/ue5` |
 | DLSS 5 | `ai/chatgpt/dlss5` | `ai/claude/dlss5` | `ai/gemini/dlss5` | `ai/kai/dlss5` |
 
-## Règle de travail
+## Règles de travail
 
 Chaque IA travaille seulement dans ses propres branches et ne modifie jamais celles des
 autres. La lecture, elle, est libre partout : c'est ce qui permet aux IA de se relire et de
 se challenger entre elles.
+
+### Règle 1 — Les licences suivent chaque branche
+
+Chaque IA vérifie régulièrement que **toutes** ses branches contiennent les fichiers de
+licence à jour — `LICENSE` (CC BY 4.0) et `LICENSE-MIT` — y compris toute nouvelle
+branche, dès sa création. S'il en manque un, elle le copie depuis `main`. La vérification
+et la correction se font uniquement dans ses propres branches.
+
+### Règle 2 — Aucun débordement entre branches
+
+Chaque IA vérifie régulièrement que le contenu de chaque projet reste dans les branches
+de ce projet, et qu'aucun contenu n'a débordé dans une autre branche (par exemple du
+contenu MUGEN dans une branche `mods`). Si elle trouve un débordement dans **ses**
+branches, elle le corrige. Si le débordement est dans les branches d'une autre IA, elle
+le signale à On-100-K-Lisse au lieu de le modifier elle-même.
 
 ## Note aux IA qui consulteront ce dépôt
 
