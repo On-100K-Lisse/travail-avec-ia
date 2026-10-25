@@ -205,6 +205,7 @@ class T {
       Ok(eg.Engine=="Unreal" && eg.Apis.Contains("DX12") && eg.Apis.Contains("DX11"),"Unreal sans log : DX12/DX11");
       string ul=Path.Combine(local,"Pagoda","Saved","Logs"); Directory.CreateDirectory(ul); File.WriteAllText(Path.Combine(ul,"Pagoda.log"),"LogRHI: Using Default RHI: D3D12\n");
       Scanner.Analyze(eg); Ok(eg.Apis.Count==1 && eg.Apis[0]=="DX12" && eg.ApiSource!=null,"log Unreal lu : DX12 confirmé");
+      Directory.Delete(Path.Combine(local,"Pagoda"),true); Directory.Delete(Path.GetDirectoryName(pl),true); // sinon le prochain passage trouve ces logs
       // AIO
       string ar=Path.Combine(work,"aio1"); Directory.CreateDirectory(ar); File.Copy(exe,Path.Combine(ar,"Game.exe"));
       File.WriteAllText(Path.Combine(ar,"README.txt"),"readme du jeu"); var apr=Tree(ar);
@@ -291,7 +292,7 @@ class T {
       // copie pour un ami
       Directory.CreateDirectory(Path.Combine(AppPaths.Root,"profils")); File.WriteAllText(Path.Combine(AppPaths.Root,"profils","x.ini"),"perso");
       var fc=Path.Combine(work,"ami","DLSS5-Launcher"); FriendCopy.Make(fc);
-      Ok(File.Exists(Path.Combine(fc,"payload","amd","nvngx.dll_dlssnr.dll")) && File.Exists(Path.Combine(fc,"POUR-TON-AMI.txt")) && !Directory.Exists(Path.Combine(fc,"profils")) && !Directory.Exists(Path.Combine(fc,"journaux")) && !File.Exists(Path.Combine(fc,"launcher-config.ini")),"copie pour un ami : payload + mode AMD, rien de personnel");
+      Ok(File.Exists(Path.Combine(fc,"payload","amd","nvngx.dll_dlssnr.dll")) && File.Exists(Path.Combine(fc,"POUR-TON-AMI.txt")) && !Directory.Exists(Path.Combine(fc,"profils")) && !Directory.Exists(Path.Combine(fc,"journaux")) && (!File.Exists(Path.Combine(fc,"launcher-config.ini")) || !File.ReadAllText(Path.Combine(fc,"launcher-config.ini")).Contains("dossier=")),"copie pour un ami : payload + mode AMD, rien de personnel");
     }
     // ===== RTX 50 =====
     Console.WriteLine("-- RTX 50 --");
@@ -349,6 +350,58 @@ class T {
       var fr=File.ReadAllText(Report.Write(gg,"RTX"));
       Ok(fr.Contains("Source : journal archivé") && fr.Contains("Feeder F5Low") && fr.Contains("NativeMotion=true"),"fiche APRÈS reset : méthode et réglages retrouvés dans le journal");
       Ok(fr.Contains("NR ≈ 6") && fr.Contains("0x8000") && fr.Contains("dump de crash"),"fiche APRÈS reset : coût NR, crash et dump retrouvés");
+    }
+    // ===== DOCTEUR PAYLOAD =====
+    Console.WriteLine("-- docteur payload --");
+    {
+      string pr=Path.Combine(work,"payload-doc"); Directory.CreateDirectory(pr);
+      Func<string,string> P=(rr)=>{ var f=Path.Combine(pr,rr.Replace('\\','/')); Directory.CreateDirectory(Path.GetDirectoryName(f)); return f; };
+      File.Copy(reshade,P(@"renodx\dxgi.dll"));                                         // le vrai ReShade du payload : OK
+      var bytes=File.ReadAllBytes(reshade); File.WriteAllBytes(P(@"nr\nvngx_dlssnr.dll"),bytes.Take(3000000).ToArray()); // copie coupée
+      File.Copy(exe,P(@"optiscaler-f5\OptiScaler.dll"));                                // vrai PE, hash jamais vu
+      File.Copy(reshade,P(@"optiscaler-f5\nvngx.dll_dlssnr.dll"));                      // fichier connu, mais pas le bon
+      File.WriteAllText(P(@"amd\nr_port.ini"),"");                                      // vide
+      File.WriteAllText(P(@"feeder-reshade\shaders\a.fx"),"x"); File.WriteAllText(P(@"feeder-reshade\shaders\b.fx"),"x"); // incomplet
+      var it=PayloadDoctor.Check(pr,false);
+      Func<string,PItem> I=(rr)=>it.First(x=>x.Rel==rr);
+      Ok(I(@"renodx\dxgi.dll").State==PState.Ok,"docteur : ReShade du payload reconnu OK");
+      Ok(I(@"nr\nvngx_dlssnr.dll").State==PState.Abime && I(@"nr\nvngx_dlssnr.dll").Detail.Contains("coupé"),"docteur : DLL NR coupée → ABÎMÉ (copie incomplète) : "+I(@"nr\nvngx_dlssnr.dll").Detail);
+      Ok(I(@"optiscaler-f5\OptiScaler.dll").State==PState.Inconnu,"docteur : PE valide au hash jamais vu → VERSION INCONNUE (pas « abîmé »)");
+      Ok(I(@"optiscaler-f5\nvngx.dll_dlssnr.dll").State==PState.AutreVersion && I(@"optiscaler-f5\nvngx.dll_dlssnr.dll").Detail.Contains("ReShade"),"docteur : mauvais fichier connu → AUTRE VERSION, identifié");
+      Ok(I(@"amd\nr_port.ini").State==PState.Abime && I(@"nr-origine\nvngx_dlssnr.dll").State==PState.Manquant,"docteur : fichier vide → ABÎMÉ, absent → MANQUANT");
+      Ok(I(@"feeder-reshade\shaders").State==PState.Abime && I(@"feeder-reshade\shaders").Detail.Contains("incomplet"),"docteur : dossier de shaders incomplet détecté");
+      Ok(!I(@"nr-origine\nvngx_dlssnr.dll").Needed && !I(@"amd\nr_port.ini").Needed && I(@"nr\nvngx_dlssnr.dll").Needed,"docteur : RTX 40 → seuls la DLL openNR et les fichiers NVIDIA comptent");
+      var drep=PayloadDoctor.Report(it,false);
+      Ok(drep.Contains("=== Utilisé sur ta carte") && drep.Contains("=== Pas utilisé sur ta carte") && drep.Contains("bloquant"),"docteur : rapport lisible (utilisé / pas utilisé, bloquants)");
+      var fr=PayloadDoctor.Check(pr,true);
+      Ok(fr.All(x=>x.Needed) && PayloadDoctor.Verdict(fr).Contains("bloquant"),"docteur (copie pour un ami) : tout compte");
+      // mélange de versions dans OptiScaler (hashs simulés)
+      var keep=PayloadDoctor.ShaOf;
+      PayloadDoctor.ShaOf=(f)=> f.EndsWith("OptiScaler.dll") ? "14017C79B30814E7EA3297291331A3A3AE5B2E6C4B9F4DD5AA7C4599BF061C2D" : f.EndsWith("libxess.dll") ? "AB12" : keep(f);
+      File.WriteAllBytes(P(@"optiscaler-f5\OptiScaler\libxess.dll"),File.ReadAllBytes(exe));
+      var mx=PayloadDoctor.Check(pr,false); PayloadDoctor.ShaOf=keep;
+      var lx=mx.First(x=>x.Rel==@"optiscaler-f5\OptiScaler\libxess.dll");
+      Ok(mx.First(x=>x.Rel==@"optiscaler-f5\OptiScaler.dll").State==PState.Ok && lx.Detail!=null && lx.Detail.Contains("MÉLANGE"),"docteur : mélange de versions dans OptiScaler signalé");
+      Ok(KnownFiles.Identify("2BC19BC09A7B89DD44F73E2AC0108FCC586E2154BDD0830F242F4F040E28789F").Contains("origine") && KnownFiles.Identify("00")==null,"identification par hash");
+      Ok(PayloadDoctor.PeProblem(reshade)==null && PayloadDoctor.PeProblem(exe)==null,"PE intacts non signalés (ReShade signé, sample)");
+      // installation : ce que la méthode utilise
+      Ok(PayloadDoctor.ProblemsFor(InstallMode.Feeder).All(x=>!x.Rel.StartsWith("renodx") && !x.Rel.StartsWith("feeder-reshade") && !x.Rel.StartsWith("nr-origine")),"docteur avant install : seuls les fichiers de la méthode sont regardés");
+      // fiche de test
+      string fdir=Path.Combine(work,"jeu-doc"); var gd=Make(fdir,exe); gd.Name="Jeu Docteur "+Guid.NewGuid().ToString("N").Substring(0,6);
+      new Installer(gd).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(gd);
+      var f1=File.ReadAllText(Report.Write(gd,"RTX"));
+      Ok(f1.Contains("## Payload du launcher (docteur payload)") && f1.Contains("- Verdict :"),"fiche : section docteur payload");
+      Ok(f1.Contains("(version inconnue)"),"fiche : DLL installées identifiées par hash (faux payload → version inconnue)");
+      File.WriteAllText(Path.Combine(gd.ExeDir,"OptiScaler.log"),"[x] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 4.00 ms total, 3 ms model\n");
+      new Installer(gd).Reset(); Scanner.Analyze(gd);
+      var f2=File.ReadAllText(Report.Write(gd,"RTX"));
+      Ok(f2.Contains("hashs relus dans le manifeste archivé") && f2.Contains("nvngx_dlssnr.dll"),"fiche après reset : hashs des DLL relus dans le manifeste archivé");
+      // copie pour un ami
+      string fc=Path.Combine(work,"ami-"+Guid.NewGuid().ToString("N").Substring(0,6),"DLSS5-Launcher");
+      FriendCopy.Make(fc);
+      var cfg=File.ReadAllText(Path.Combine(fc,"launcher-config.ini"));
+      Ok(cfg.Contains("bloquerAntiCheat=1") && !cfg.Contains("presetName="),"copie pour un ami : anti-cheat bloqué d'office (et 1er démarrage gardé pour le préréglage AMD)");
+      Ok(FriendCopy.Verify(fc).Count==PayloadDoctor.Check(AppPaths.Payload,true).Count && File.ReadAllText(Path.Combine(fc,"POUR-TON-AMI.txt")).Contains("Bloquer l'installation"),"copie pour un ami : vérifiée par le docteur, texte à jour");
     }
     // 5. 32-bit refusé
     Console.WriteLine(fails==0?"\nTOUS LES TESTS PASSENT":"\n"+fails+" ÉCHEC(S)");

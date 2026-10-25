@@ -115,3 +115,26 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
     `Documents`, `Saved Games`, le dossier d'installation, et le dernier rapport du Crash Reporter
     d'Unreal (`Saved\Crashes`, dont le message d'erreur de `CrashContext.runtime-xml`). S'il n'en
     trouve aucun, la fiche le dit et liste les endroits cherchés.
+
+## 11. Docteur payload, blocage anti-cheat — 25 oct.
+
+- **Origine :** deux idées proposées par Kai, retenues avec On-100-K-Lisse avant d'envoyer le
+  launcher à deux testeurs (une RTX 5070 et une RX 9070 XT).
+- **Docteur payload :**
+  - au démarrage, il vérifie les 22 éléments de `payload\` : SHA-256 des DLL, présence des
+    réglages, nombre de fichiers des dossiers. Le verdict s'affiche en haut de la fenêtre, et un clic
+    ouvre le rapport ;
+  - cinq états : OK, AUTRE VERSION, VERSION INCONNUE, ABÎMÉ (y compris une DLL coupée par une copie
+    incomplète), MANQUANT. Il signale aussi un mélange de versions dans OptiScaler ;
+  - avant une installation : un fichier abîmé ou manquant bloque, et rien n'est touché dans le jeu.
+    Une autre version demande confirmation ;
+  - la fiche de test donne le verdict, et identifie chaque DLL installée par son hash, même après un
+    reset ;
+  - la copie pour un ami est vérifiée juste après avoir été faite.
+- **Blocage anti-cheat :** une case « Bloquer l'installation dans les jeux avec anti-cheat »,
+  décochée par défaut et cochée d'office dans une copie pour un ami. La décocher demande d'accepter
+  un avertissement.
+- **Vérifié :** 130 vérifications automatiques, puis essai sous Windows par On-100-K-Lisse le
+  25 octobre : ça fonctionne.
+- **Constat au passage :** ReShade dans le payload est bien la version 6.8.0. Le docteur la lit
+  dans les infos du fichier.

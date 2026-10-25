@@ -959,6 +959,8 @@ namespace Dlss5Launcher
             return h;
         }
 
+        static string Who(string sha) { string n = KnownFiles.Identify(sha); return n == null ? "  (version inconnue)" : "  → " + n; }
+
         public static string Write(Game g, string gpu)
         {
             var sb = new StringBuilder();
@@ -990,13 +992,25 @@ namespace Dlss5Launcher
 
             sb.AppendLine("## Fichiers installés (SHA-256)");
             sb.AppendLine();
-            if (archive != null) sb.AppendLine("(déjà retirés par la réinitialisation — voir la fiche faite automatiquement avant le reset, s'il y en a une)");
+            if (archive != null)
+            {   // les fichiers sont déjà retirés, mais le manifeste archivé garde leur hash
+                var bins = m == null ? new List<ManEntry>() : m.Entries.Where(e => e.Kind != "MOVED" && e.Kind != "MOVEDDIR" && !string.IsNullOrEmpty(e.Sha) &&
+                    (e.Rel.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || e.Rel.EndsWith(".addon64", StringComparison.OrdinalIgnoreCase))).ToList();
+                if (bins.Count == 0) sb.AppendLine("(déjà retirés par la réinitialisation, et ce journal n'a pas de manifeste)");
+                else sb.AppendLine("(déjà retirés par la réinitialisation ; hashs relus dans le manifeste archivé)");
+                foreach (var e in bins) sb.AppendLine("- `" + e.Rel + "` : " + e.Sha + Who(e.Sha));
+            }
             foreach (var f in new[] { "nvngx_dlssnr.dll", "nvngx.dll_dlssnr.dll", m != null ? m.Proxy : null, "renodx-dlss5.addon64" })
             {
-                if (string.IsNullOrEmpty(f)) continue;
+                if (string.IsNullOrEmpty(f) || archive != null) continue;
                 string p = Path.Combine(dir, f);
-                if (File.Exists(p)) sb.AppendLine("- `" + f + "` : " + Hash.Sha(p));
+                if (File.Exists(p)) { string h = Hash.Sha(p); sb.AppendLine("- `" + f + "` : " + h + Who(h)); }
             }
+            sb.AppendLine();
+
+            sb.AppendLine("## Payload du launcher (docteur payload)");
+            sb.AppendLine();
+            try { sb.Append(PayloadDoctor.FicheSection(PayloadDoctor.Check())); } catch (Exception ex) { sb.AppendLine("- vérification impossible : " + ex.Message); }
             sb.AppendLine();
 
             sb.AppendLine("## Réglages NR actifs");
@@ -1118,8 +1132,13 @@ namespace Dlss5Launcher
             CopyTree(Path.Combine(root, "source"), Path.Combine(dest, "source"));
             CopyTree(AppPaths.Payload, Path.Combine(dest, "payload"));
             File.WriteAllText(Path.Combine(dest, "POUR-TON-AMI.txt"), Text, new UTF8Encoding(true));
+            // l'anti-cheat est bloqué d'office chez l'ami ; il peut le débloquer lui-même, avec un avertissement
+            File.WriteAllLines(Path.Combine(dest, "launcher-config.ini"), new[] { "# Configuration du DLSS 5 Launcher (copie pour un ami)", "bloquerAntiCheat=1" });
             Log.W("Copie pour un ami créée : " + dest);
         }
+
+        // Vérifie le payload de la copie (tout compte : l'ami peut avoir n'importe quelle carte).
+        public static List<PItem> Verify(string dest) { return PayloadDoctor.Check(Path.Combine(dest, "payload"), true); }
 
         static void CopyTree(string src, string dst)
         {
@@ -1157,7 +1176,12 @@ namespace Dlss5Launcher
 "- Pour vérifier : touche Inser en jeu → Neural Rendering → la ligne doit dire « Model backend: vendor-neutral port ».\r\n" +
 "  Après la partie, « Fiche de test » lit nr_port.log et dit si le bon modèle (small) tournait.\r\n\r\n" +
 "À SAVOIR\r\n" +
-"- Jamais dans un jeu en ligne avec anti-cheat (ban possible) : le launcher les marque en rouge.\r\n" +
+"- Jamais dans un jeu en ligne avec anti-cheat (ban possible) : le launcher les marque en rouge et, dans cette copie,\r\n" +
+"  refuse d'y installer quoi que ce soit. Pour un jeu solo joué hors ligne, tu peux décocher « Bloquer l'installation\r\n" +
+"  dans les jeux avec anti-cheat » (onglet Jeu) : c'est à tes risques. La détection se fait par fichiers : un anti-cheat\r\n" +
+"  côté serveur ou installé ailleurs peut passer inaperçu, donc le blocage ne garantit rien.\r\n" +
+"- En haut de la fenêtre, « Payload » dit si tous les fichiers sont là et intacts. S'il y a un problème, clique dessus :\r\n" +
+"  « Copier le rapport » et envoie-le.\r\n" +
 "- Les DLL nvngx_* viennent de NVIDIA et restent sous la licence de NVIDIA ; OptiScaler F5 est un projet libre\r\n" +
 "  (github.com/janblade/OptiScaler-F5-DLSSNR-Multipass), d'où vient aussi le port vendor-neutral.\r\n";
     }

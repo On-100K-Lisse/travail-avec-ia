@@ -87,7 +87,10 @@ namespace Dlss5Launcher
         // contrôles
         ListView list;
         TextBox search, journal, details;
-        Label lblGame, lblStatus, lblGpu, lblFooter, lblNote;
+        Label lblGame, lblStatus, lblGpu, lblFooter, lblNote, lblPayload;
+        CheckBox chkAntiCheat;
+        bool blockAntiCheat;                         // launcher-config.ini : bloquerAntiCheat=1 (d'office dans la copie pour un ami)
+        List<PItem> payloadItems;
         ComboBox cbMode, cbProxy, cbPreset;
         NrSettings defaults = new NrSettings();    // réglages par défaut (jeux sans profil)
         string defaultPresetName = Presets.Names[0], presetName = Presets.Names[0];
@@ -113,7 +116,8 @@ namespace Dlss5Launcher
 
             bool old; gpuText = Gpu.Describe(out old);
             ForcedGpuFromConfig();
-            bool firstRun = !File.Exists(AppPaths.Config);
+            bool firstRun = true;
+            try { firstRun = !File.Exists(AppPaths.Config) || !File.ReadAllText(AppPaths.Config).Contains("presetName="); } catch { }
             LoadConfig();
             if (firstRun && Gpu.IsAmdMode) { defaults = Presets.Get(8); defaultPresetName = Presets.Names[8]; settings = defaults.Clone(); presetName = defaultPresetName; }
 
@@ -134,10 +138,13 @@ namespace Dlss5Launcher
         // =============================================================== en-tête
         void BuildHeader()
         {
-            var head = new Panel { Dock = DockStyle.Top, Height = 80, BackColor = Theme.Panel, Padding = new Padding(18, 10, 18, 10) };
+            var head = new Panel { Dock = DockStyle.Top, Height = 100, BackColor = Theme.Panel, Padding = new Padding(18, 10, 18, 10) };
             var title = new Label { Text = "DLSS 5 Launcher", Font = Theme.Title, ForeColor = Theme.Text, AutoSize = true, Location = new Point(18, 10) };
             lblGpu = new Label { Text = gpuText + "   ·   DLL NR : " + Gpu.NrLabel + (Gpu.IsAmdMode ? " + port vendor-neutral 0.1.32" : ""), ForeColor = Gpu.IsAmdMode ? Theme.Orange : Theme.Dim, AutoSize = true, Location = new Point(21, 44) };
             var accent = new Panel { Dock = DockStyle.Bottom, Height = 2, BackColor = Theme.Green };
+            lblPayload = new Label { Text = "Payload : vérification…", ForeColor = Theme.Dim, AutoSize = true, Location = new Point(21, 68), Cursor = Cursors.Hand };
+            lblPayload.Click += (s, e) => ShowDoctor();
+            tips.SetToolTip(lblPayload, "Docteur payload : vérifie que les fichiers de payload\\ sont tous là, intacts (SHA-256)\net dans la version testée. Clique pour voir le rapport.");
 
             var right = new FlowLayoutPanel { Dock = DockStyle.Right, Width = 620, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 10, 0, 0), BackColor = Theme.Panel };
             search = new TextBox { Width = 230, Margin = new Padding(0, 6, 10, 0), BorderStyle = BorderStyle.FixedSingle };
@@ -154,7 +161,7 @@ namespace Dlss5Launcher
             right.Width = 720; search.Width = 170; bAdd.Width = 170; bScan.Width = 115; bFriend.Width = 150;
             right.Controls.AddRange(new Control[] { search, bScan, bAdd, bFriend });
 
-            head.Controls.Add(right); head.Controls.Add(title); head.Controls.Add(lblGpu); head.Controls.Add(accent);
+            head.Controls.Add(right); head.Controls.Add(title); head.Controls.Add(lblGpu); head.Controls.Add(lblPayload); head.Controls.Add(accent);
             Controls.Add(head);
 
             var foot = new Panel { Dock = DockStyle.Bottom, Height = 28, BackColor = Theme.Panel };
@@ -286,7 +293,14 @@ namespace Dlss5Launcher
                        "Ferme toujours le jeu complètement avant d'installer, de réinitialiser ou de changer les réglages."
             };
 
-            flow.Controls.AddRange(new Control[] { lblGame, lblStatus, details, lblNote, opts, row1, row2, help });
+            chkAntiCheat = new CheckBox
+            {
+                Text = "Bloquer l'installation dans les jeux avec anti-cheat", AutoSize = true, ForeColor = Theme.Text, BackColor = Theme.Panel,
+                Checked = blockAntiCheat, Margin = new Padding(2, 10, 0, 0), Cursor = Cursors.Hand
+            };
+            tips.SetToolTip(chkAntiCheat, "Coché : le launcher refuse d'installer quoi que ce soit dans un jeu où il voit un anti-cheat\n(EasyAntiCheat, BattlEye…). Coché d'office dans une copie pour un ami.\nLa détection se fait par fichiers : un anti-cheat côté serveur ou installé ailleurs peut passer inaperçu.");
+            chkAntiCheat.CheckedChanged += (s, e) => AntiCheatToggled();
+            flow.Controls.AddRange(new Control[] { lblGame, lblStatus, details, lblNote, opts, row1, row2, chkAntiCheat, help });
             return p;
         }
 
@@ -675,7 +689,15 @@ namespace Dlss5Launcher
                 Ask("Aucun DLSS/FSR/XeSS trouvé : " + Installer.ModeName(eff) + " n'aura rien à intercepter.\nLe Feeder F5Low est fait pour ce genre de jeu.\n\nInstaller " + Installer.ModeName(eff) + " quand même ?", MessageBoxIcon.Question) != DialogResult.Yes) return;
             string proxy = cbProxy.SelectedIndex <= 0 ? null : (string)cbProxy.SelectedItem;
 
-            if (g.Status == GameStatus.Bloque &&
+            if (g.AntiCheat.Count > 0 && blockAntiCheat)
+            {
+                Error("Installation bloquée : ce jeu contient un anti-cheat (" + string.Join(", ", g.AntiCheat) + ").\n\n" +
+                      "Injecter une DLL dans un jeu en ligne peut mener à un BANNISSEMENT de ton compte.\n\n" +
+                      "Si c'est un jeu solo joué hors ligne et que tu acceptes ce risque, décoche « Bloquer l'installation dans les jeux avec anti-cheat » (sous les boutons).");
+                return;
+            }
+            if (!PayloadOkFor(eff)) return;
+            if (g.AntiCheat.Count > 0 &&
                 Ask("Ce jeu contient un anti-cheat (" + string.Join(", ", g.AntiCheat) + ").\n\nInjecter une DLL peut mener à un BANNISSEMENT dans un jeu en ligne.\nContinue seulement pour un jeu solo joué hors ligne (ou avec l'anti-cheat désactivé).\n\nInstaller quand même ?", MessageBoxIcon.Warning) != DialogResult.Yes) return;
             if (g.Status == GameStatus.PeuProbable &&
                 Ask("Ce jeu semble être DX9 ou d'une API non gérée : ça ne marchera probablement pas.\n\nInstaller quand même pour tester ?", MessageBoxIcon.Question) != DialogResult.Yes) return;
@@ -827,9 +849,15 @@ namespace Dlss5Launcher
                 if (d.ShowDialog(this) != DialogResult.OK) return;
                 string dest = Path.Combine(d.SelectedPath, "DLSS5-Launcher");
                 if (Directory.Exists(dest)) { Error("Un dossier DLSS5-Launcher existe déjà là. Choisis un autre endroit."); return; }
-                RunJob("Copie pour un ami…", () => FriendCopy.Make(dest), null, () =>
+                List<PItem> chk = null;
+                RunJob("Copie pour un ami (copie puis vérification des SHA-256)…", () => { FriendCopy.Make(dest); chk = FriendCopy.Verify(dest); }, null, () =>
                 {
-                    Info("Copie prête dans :\n" + dest + "\n\nDonne tout le dossier à ton ami. Il double-clique DLSS5-Launcher.exe : sur une Radeon, le mode AMD s'active tout seul.\nLis aussi « POUR-TON-AMI.txt » dedans.");
+                    var bad = chk == null ? new List<PItem>() : chk.Where(x => x.State != PState.Ok).ToList();
+                    string ver = chk == null ? "" : bad.Count == 0
+                        ? "\n\nDocteur payload : la copie est complète et identique au payload testé (" + chk.Count + " éléments vérifiés)."
+                        : "\n\nATTENTION, docteur payload : " + PayloadDoctor.Verdict(chk) + " dans la copie :\n" + string.Join("\n", bad.Take(8).Select(x => "  " + x.StateText + " : " + x.Rel)) + "\nCorrige ton payload avant d'envoyer la copie.";
+                    Info("Copie prête dans :\n" + dest + "\n\nDonne tout le dossier à ton ami. Il double-clique DLSS5-Launcher.exe : sur une Radeon, le mode AMD s'active tout seul.\n" +
+                         "L'installation dans les jeux avec anti-cheat y est bloquée d'office.\nLis aussi « POUR-TON-AMI.txt » dedans." + ver);
                     try { Process.Start("explorer.exe", "\"" + dest + "\""); } catch { }
                 });
             }
@@ -936,12 +964,88 @@ namespace Dlss5Launcher
             }
         }
 
-        void CheckPayloadAtStart()
+        // =============================================================== docteur payload
+        void CheckPayloadAtStart() { RunDoctor(false); }
+
+        // Vérifie payload\ en arrière-plan (≈ 800 Mo à hasher la première fois) et met l'en-tête à jour.
+        void RunDoctor(bool full, Action then = null)
         {
-            try { Installer.CheckPayload(InstallMode.OptiScaler); }
-            catch (Exception ex) { Log.W("Payload OptiScaler incomplet : " + ex.Message.Replace("\n", " ")); }
-            try { Installer.CheckPayload(InstallMode.RenoDX); }
-            catch (Exception ex) { Log.W("Payload RenoDX incomplet : " + ex.Message.Replace("\n", " ")); }
+            if (full) Hash.ClearCache();
+            lblPayload.Text = "Payload : vérification…"; lblPayload.ForeColor = Theme.Dim;
+            new Thread(() =>
+            {
+                List<PItem> items = null;
+                try { items = PayloadDoctor.Check(); } catch (Exception ex) { Log.W("Docteur payload : erreur — " + ex.Message); }
+                BeginInvoke((Action)(() =>
+                {
+                    payloadItems = items;
+                    if (items == null) { lblPayload.Text = "Payload : vérification impossible (voir Journal)"; lblPayload.ForeColor = Theme.Red; }
+                    else
+                    {
+                        var bad = items.Where(x => x.Needed && x.State != PState.Ok).ToList();
+                        lblPayload.Text = "Payload : " + PayloadDoctor.Verdict(items) + (bad.Count > 0 ? "  —  clique pour le rapport" : "");
+                        lblPayload.ForeColor = bad.Count == 0 ? Theme.Green : bad.Any(x => x.Blocking) ? Theme.Red : Theme.Yellow;
+                        Log.W("Docteur payload : " + PayloadDoctor.Verdict(items));
+                        foreach (var x in bad) Log.W("  " + x.StateText + " : " + x.Rel + (x.Detail != null ? " — " + x.Detail : ""));
+                    }
+                    if (then != null) then();
+                }));
+            }) { IsBackground = true }.Start();
+        }
+
+        void ShowDoctor()
+        {
+            var f = new Form { Text = "Docteur payload", Width = 1060, Height = 640, StartPosition = FormStartPosition.CenterParent, BackColor = Theme.Panel, ForeColor = Theme.Text, Font = Theme.UI, MinimizeBox = false, ShowIcon = false };
+            var box = new TextBox { Multiline = true, ReadOnly = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Both, WordWrap = false, BackColor = Color.FromArgb(14, 16, 19), ForeColor = Theme.Text, Font = Theme.Mono, BorderStyle = BorderStyle.None };
+            var bar = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 50, BackColor = Theme.Panel, Padding = new Padding(10, 8, 10, 0) };
+            var bAgain = Theme.Btn("⟳  Revérifier tout", Theme.Green, 170);
+            var bCopy = Theme.Btn("Copier le rapport", Theme.Blue, 170);
+            var bOpen = Theme.Btn("Ouvrir payload\\", Theme.Line, 150);
+            var bClose = Theme.Btn("Fermer", Theme.Line, 110);
+            bar.Controls.AddRange(new Control[] { bAgain, bCopy, bOpen, bClose });
+            f.Controls.Add(box); f.Controls.Add(bar);
+            Action fill = () => box.Text = payloadItems == null ? "Vérification en cours…" : PayloadDoctor.Report(payloadItems, false).Replace("\n", "\r\n").Replace("\r\r", "\r");
+            fill();
+            bAgain.Click += (s, e) => { box.Text = "Vérification en cours (calcul des SHA-256)…"; bAgain.Enabled = false; RunDoctor(true, () => { if (!f.IsDisposed) { fill(); box.SelectionLength = 0; bAgain.Enabled = true; } }); };
+            bCopy.Click += (s, e) => { try { Clipboard.SetText(box.Text); bCopy.Text = "Copié ✓"; } catch { } };
+            bOpen.Click += (s, e) => { try { Process.Start("explorer.exe", "\"" + AppPaths.Payload + "\""); } catch { } };
+            bClose.Click += (s, e) => f.Close();
+            f.Shown += (s, e) => { box.SelectionLength = 0; bClose.Focus(); };   // pas tout le texte surligné à l'ouverture
+            if (payloadItems == null) RunDoctor(false, () => { if (!f.IsDisposed) fill(); });
+            f.ShowDialog(this);
+        }
+
+        // Avant une installation : un fichier manquant ou abîmé bloque, une autre version demande confirmation.
+        bool PayloadOkFor(InstallMode mode)
+        {
+            List<PItem> pb;
+            try { pb = PayloadDoctor.ProblemsFor(mode); } catch (Exception ex) { Log.W("Docteur payload : " + ex.Message); return true; }
+            if (pb.Count == 0) return true;
+            string list = string.Join("\n", pb.Select(x => "  " + x.StateText + " : " + x.Rel + (x.Detail != null ? "\n      " + x.Detail : "")));
+            if (pb.Any(x => x.Blocking))
+            {
+                Error("Le payload du launcher n'est pas complet pour " + Installer.ModeName(mode) + " :\n\n" + list +
+                      "\n\nRien n'a été installé. Recopie ces fichiers dans payload\\ (clique « Payload » en haut pour le rapport complet).");
+                return false;
+            }
+            return Ask("Le payload n'est pas exactement celui qui a été testé :\n\n" + list +
+                       "\n\nÇa peut marcher (souvent une mise à jour), mais si quelque chose cloche, ce n'est peut-être pas un bug du launcher.\nLa fiche de test le notera.\n\nInstaller quand même ?", MessageBoxIcon.Warning) == DialogResult.Yes;
+        }
+
+        bool acGuard;
+        void AntiCheatToggled()
+        {
+            if (acGuard) return;
+            if (!chkAntiCheat.Checked && blockAntiCheat &&
+                Ask("Débloquer l'installation dans les jeux avec anti-cheat ?\n\n" +
+                    "Injecter une DLL dans un jeu protégé par un anti-cheat peut mener à un BANNISSEMENT DÉFINITIF de ton compte, dès la prochaine connexion en ligne.\n\n" +
+                    "Ne le fais que pour un jeu solo joué hors ligne (ou avec l'anti-cheat désactivé par le jeu lui-même). Le launcher te redemandera confirmation à chaque installation.\n\nDébloquer quand même ?", MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                acGuard = true; chkAntiCheat.Checked = true; acGuard = false; return;
+            }
+            blockAntiCheat = chkAntiCheat.Checked;
+            Log.W("Blocage anti-cheat : " + (blockAntiCheat ? "activé" : "désactivé par l'utilisateur"));
+            SaveConfig();
         }
 
         void SetBusy(bool b, string text)
@@ -987,6 +1091,7 @@ namespace Dlss5Launcher
                     if (k == "dossier") customFolders.Add(v);
                     else if (k == "preset") { int i; if (int.TryParse(v, out i) && i >= 0 && i < 6) defaultPresetName = Presets.Names[i]; else if (int.TryParse(v, out i)) defaultPresetName = "Personnalisé"; }
                     else if (k == "presetName") defaultPresetName = v;
+                    else if (k == "bloquerAntiCheat") blockAntiCheat = v.Trim() == "1";
                     else kv[k] = v;
                 }
                 defaults.LoadFrom(kv);
@@ -1004,6 +1109,7 @@ namespace Dlss5Launcher
                 lines.Add("presetName=" + defaultPresetName);
                 if (forcedGpu != null) lines.Add("forcerGpu=" + forcedGpu);
                 if (forcedNr != null) lines.Add("dllNr=" + forcedNr);
+                lines.Add("bloquerAntiCheat=" + (blockAntiCheat ? "1" : "0"));
                 defaults.SaveTo(lines);
                 File.WriteAllLines(AppPaths.Config, lines);
             }

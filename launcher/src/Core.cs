@@ -55,6 +55,7 @@ namespace Dlss5Launcher
                 return BitConverter.ToString(h.ComputeHash(s)).Replace("-", "");
         }
         // Les fichiers du payload ne changent pas pendant une session : on garde leur hash en cache.
+        public static void ClearCache() { lock (Cache) Cache.Clear(); }
         public static string ShaCached(string path)
         {
             var fi = new FileInfo(path);

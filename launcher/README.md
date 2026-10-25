@@ -60,7 +60,13 @@ Les jeux 32-bit et DX9 ne sont pas pris en charge.
   (Streamline), `libxess*.dll`, `ffx_fsr*.dll` ou `amd_fidelityfx*.dll`.
 - **Anti-cheat :** EasyAntiCheat, BattlEye, EA AntiCheat, PunkBuster et quelques autres. Ces jeux
   sont marqués en rouge, parce qu'injecter une DLL dans un jeu en ligne peut mener à un
-  bannissement.
+  bannissement. L'installation demande alors une confirmation. Avec la case **« Bloquer
+  l'installation dans les jeux avec anti-cheat »** (onglet Jeu), elle est carrément refusée :
+  - la case est décochée par défaut, et **cochée d'office dans une copie pour un ami** ;
+  - la décocher demande d'accepter un avertissement sur le risque de bannissement ;
+  - la détection se fait par les fichiers du jeu : un anti-cheat côté serveur, ou installé
+    ailleurs que dans le dossier du jeu, peut passer inaperçu. Le blocage protège, il ne garantit
+    rien.
 - **Autres mods :** OptiScaler, ReShade, RenoDX, les restes d'un 1-Click DLSS5 ou d'un
   DLSS5-ReShade-AIO.
 
@@ -69,8 +75,8 @@ bleu = installé, orange = autre mod présent, rouge = anti-cheat, gris = non co
 
 ### L'installation
 
-1. Il vérifie que le jeu est fermé, que le payload est complet et que le dossier est accessible en
-   écriture. Si le jeu est dans `Program Files`, il propose de se relancer en administrateur.
+1. Il vérifie que le jeu est fermé, que le dossier est accessible en écriture, et que les fichiers
+   du payload dont la méthode a besoin sont intacts (voir [le docteur payload](#le-docteur-payload)). Si le jeu est dans `Program Files`, il propose de se relancer en administrateur.
 2. Il **écrit le manifeste avant chaque copie** (`<dossier de l'exe>\_DLSS5_Launcher\manifest.tsv`).
    Même un plantage au milieu reste réversible.
 3. Chaque fichier qu'il remplace est d'abord **sauvegardé**, et la copie est vérifiée par SHA-256.
@@ -78,6 +84,34 @@ bleu = installé, orange = autre mod présent, rouge = anti-cheat, gris = non co
 5. Les DLL d'autres chargeurs de mods, comme le `version.dll` de Cyber Engine Tweaks, un ASI loader
    ou le `dxgi.dll` de dxvk, ne sont **jamais touchées** : il prend un autre nom de proxy.
 6. Chaque fichier copié est revérifié par SHA-256.
+
+### Le docteur payload
+
+Un payload incomplet, abîmé pendant une copie ou mélangé entre deux versions donne des symptômes
+qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le dossier `payload\`.
+
+- **Quand :**
+  - au démarrage, en arrière-plan : une ligne « Payload : … » en haut de la fenêtre donne le
+    verdict, et un clic dessus ouvre le rapport complet, qu'on peut copier ;
+  - avant chaque installation, seulement pour les fichiers que la méthode utilise ;
+  - juste après une copie pour un ami, sur la copie.
+- **Comment :** 22 éléments sont vérifiés. Pour les DLL, c'est le SHA-256 comparé à celui du payload
+  testé (tableau plus bas, liste complète dans `src/Doctor.cs`). Pour les fichiers de réglages et
+  les dossiers de shaders, c'est leur présence et leur nombre de fichiers.
+- **Les cinq états :**
+
+  | État | Ce que ça veut dire | À l'installation |
+  |---|---|---|
+  | OK | Identique au payload testé | — |
+  | AUTRE VERSION | Un fichier connu, mais pas celui attendu ici (par exemple la DLL NR d'origine placée dans `nr\`) | Confirmation demandée |
+  | VERSION INCONNUE | Un hash jamais vu, souvent une mise à jour : ça peut marcher, mais ce n'est pas la version testée | Confirmation demandée |
+  | ABÎMÉ | Fichier vide, dossier incomplet, ou DLL coupée : ses sections ou sa signature dépassent la fin du fichier | Bloqué |
+  | MANQUANT | Le fichier n'est pas là | Bloqué |
+
+- Si le cœur d'OptiScaler est en 0.1.32 mais qu'un de ses composants ne l'est pas, le rapport
+  signale un **mélange de versions**.
+- Le rapport sépare ce que la carte du PC utilise de ce qui ne sert qu'à une copie pour un ami
+  (par exemple le port AMD sur une carte NVIDIA).
 
 ### La réinitialisation « universelle »
 
@@ -121,7 +155,10 @@ bleu = installé, orange = autre mod présent, rouge = anti-cheat, gris = non co
   arrive, sans perdre les informations.
 - La **fiche de test** est un fichier Markdown qui contient :
   - le jeu, l'API, la méthode, la carte graphique et la DLL NR utilisée ;
-  - le hash des DLL installées et les réglages actifs ;
+  - le hash des DLL installées, avec le nom du fichier reconnu (par exemple « DLL NR OpenNR
+    310.9.16 compat-fp16 »), même après un reset grâce au manifeste archivé ;
+  - le verdict du docteur payload ;
+  - les réglages actifs ;
   - le coût mesuré et un extrait du log ;
   - les erreurs du log du moteur (Unreal / Unity) ;
   - un **diagnostic automatique** : crash GPU (`DEVICE_HUNG`), exception d'Unreal, RR active,
@@ -155,7 +192,9 @@ payload\
 | Build compat-fp16 (RTX 20/30/40) | Reconstruite localement avec [clshortfuse/openNR](https://github.com/clshortfuse/openNR) à partir de la DLL 310.9.16 : voir `ai/kai/dlss5` |
 | ReShade, RenoDX, DLSS5-Feeder, LumeniteFX | Repris du payload de [1-Click DLSS5](https://github.com/reiluisii/1-Click-DLSS5) v3.0.2 ; chaque projet a sa propre page (voir Crédits) |
 
-SHA-256 des fichiers utilisés, pour vérifier qu'on a les mêmes :
+SHA-256 des fichiers utilisés, pour vérifier qu'on a les mêmes. Le launcher fait cette
+vérification lui-même (docteur payload) ; les composants du dossier `OptiScaler\` (XeSS, FSR,
+D3D12) sont aussi vérifiés, et leurs hashs sont dans `src/Doctor.cs`.
 
 | Fichier | SHA-256 |
 |---|---|
@@ -194,7 +233,8 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 | `Core.cs` | Chemins, journal, hash, lecture/écriture d'INI par section, lecture d'en-tête PE, scan des bibliothèques, analyse d'un jeu, logs des moteurs (Unity / Unreal), détection de la carte graphique |
 | `Install.cs` | Réglages et préréglages, génération des INI, manifeste, installation, réinitialisation, garde-fous de stabilité, mesure du coût NR, diagnostic, fiche de test, copie pour un ami |
 | `Cleaner.cs` | Réinitialisation universelle : manifeste du 1-Click, reconnaissance des restes de mods, quarantaine et annulation |
-| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, molette qui ne change jamais une valeur par accident |
+| `Doctor.cs` | Docteur payload : hashs des fichiers connus, vérification du `payload\`, détection d'une DLL coupée, rapport |
+| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
 | `COMPILER.bat` | Recompile l'exe avec le compilateur C# inclus dans Windows (`csc.exe` de .NET Framework 4) |
 
 ### Compiler
@@ -213,13 +253,14 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 ### Tests
 
-[`tests/Test.cs`](tests/Test.cs) contient **110 vérifications automatiques**. Elles tournent sur de
+[`tests/Test.cs`](tests/Test.cs) contient **130 vérifications automatiques**. Elles tournent sur de
 faux jeux, avec un faux payload : installation, réglages, réinitialisation identique au hash près,
 nettoyage d'un 1-Click et d'une installation manuelle, détection Unity / Unreal, mode AMD, RTX 50,
-diagnostic de crash, fiche de test faite après un reset. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+diagnostic de crash, fiche de test faite après un reset, docteur payload (fichier coupé, vide,
+inconnu, autre version, mélange de versions) et copie pour un ami. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
-mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs   # + les -r: ci-dessus
+mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs   # + les -r: ci-dessus
 mono test.exe <un exe 64-bit quelconque> <un dxgi.dll de ReShade> <dossier de travail vide>
 ```
 
@@ -235,6 +276,9 @@ Ces tests ne remplacent pas Windows ni un vrai GPU : ce qui a été vérifié en
 - Le nettoyage reconnaît ReShade, mais pas *pourquoi* il est là. Un ReShade installé pour autre chose
   (presets de couleur) part aussi en quarantaine. Il est listé avant confirmation, et récupérable.
 - RTX 50 et AMD : pas encore testés sur du vrai matériel.
+- Le docteur payload ne connaît que les versions déjà rencontrées. Une nouvelle version d'un
+  composant sort « VERSION INCONNUE » : ce n'est pas une erreur, c'est seulement une version qui
+  n'a pas été testée avec le launcher.
 
 ## Crédits
 
@@ -259,4 +303,5 @@ de l'utilisateur, ou lit leurs fichiers de configuration. Chacun garde sa licenc
 Les noms de jeux et de moteurs (Unreal Engine, Unity, Cyberpunk 2077, etc.) appartiennent à leurs
 propriétaires. Ce projet n'est affilié à aucun d'eux.
 
-Idée, essais en jeu et décisions : On-100-K-Lisse. Code et documentation : Claude.
+Idée, essais en jeu et décisions : On-100-K-Lisse. Code et documentation : Claude. Le docteur payload
+et le blocage anti-cheat de la copie pour un ami viennent d'idées proposées par Kai (`ai/kai/dlss5`).

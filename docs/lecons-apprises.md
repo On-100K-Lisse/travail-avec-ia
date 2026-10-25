@@ -91,9 +91,20 @@ On-100-K-Lisse réinitialise dès que quelque chose cloche, et en parle ensuite.
 le reset était vide. Plutôt que de demander de changer d'habitude, le launcher fait maintenant la
 fiche tout seul avant le reset, et sait relire les journaux archivés après.
 
-## 8. Les tests automatiques ne remplacent pas le jeu
+## 8. Un test qui laisse des traces fausse le suivant
 
-Le launcher a 110 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
+Certains tests créent de faux logs de jeu là où Windows les mettrait (`AppData\Local`,
+`AppData\LocalLow`), puis ne les effaçaient pas. Le 25 octobre, un passage des tests a trouvé les
+faux logs laissés par un passage précédent, et deux tests « jeu sans log » ont échoué, alors que
+le launcher n'avait rien de cassé.
+
+- **Correction :** chaque test efface ce qu'il crée en dehors de son dossier de travail.
+- **Leçon :** lancer les tests deux fois de suite. Un test qui ne passe qu'une fois dépend de
+  l'état de la machine.
+
+## 9. Les tests automatiques ne remplacent pas le jeu
+
+Le launcher a 130 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
 erreurs : ordre de restauration, fichiers oubliés, mauvais réglages d'INI. Mais aucun de ces tests
 n'aurait trouvé les leçons 1, 2, 3 et 5 : il a fallu Windows, un vrai jeu et un humain devant
 l'écran.
