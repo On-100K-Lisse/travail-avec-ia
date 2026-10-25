@@ -98,3 +98,20 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
   - ce log est copié dans les journaux au reset ;
   - le diagnostic reconnaît les exceptions d'Unreal et la « profondeur jamais trouvée » ;
   - correction d'un faux « génération d'images vue » dans la mesure de performance.
+
+## 10. Fiche de test après un reset — 25 oct.
+
+- **Constat (rapporté par On-100-K-Lisse) :** sa façon de travailler, c'est de réinitialiser le jeu
+  dès qu'un problème arrive, puis de décrire le problème. Une fiche de test faite *après* le reset
+  sortait vide, parce que les logs avaient déjà été déplacés dans `journaux\`.
+- **Corrections :**
+  - **Réinitialiser crée la fiche de test automatiquement, juste avant le reset**, pendant que les
+    logs, les réglages et les DLL sont encore en place. Le message de fin donne son nom.
+  - Une fiche faite après un reset lit **le dernier journal archivé** du jeu. Le reset y copie
+    maintenant aussi le manifeste. Pour un vieux journal sans manifeste, la méthode est déduite des
+    INI archivés.
+  - Le détail du jeu montre le coût NR de la dernière session archivée.
+  - Le log du moteur est cherché à plus d'endroits : `AppData\Local`, `Documents\My Games`,
+    `Documents`, `Saved Games`, le dossier d'installation, et le dernier rapport du Crash Reporter
+    d'Unreal (`Saved\Crashes`, dont le message d'erreur de `CrashContext.runtime-xml`). S'il n'en
+    trouve aucun, la fiche le dit et liste les endroits cherchés.

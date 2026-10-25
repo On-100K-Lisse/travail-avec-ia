@@ -71,9 +71,14 @@ recréations du modèle quand la RR s'active).
 
 À notre connaissance, `0x8000` est le code qu'Unreal Engine 5 utilise pour signaler un **crash GPU
 détecté par son moteur de rendu**. **Ce n'est pas confirmé :** il faut le vérifier dans le code
-d'Unreal ou dans le log du jeu. Le message exact d'Unreal n'était pas lisible dans le dump : il est
-dans le log du jeu (`AppData\Local\SpeciesUnknown\Saved\Logs`), pas encore lu. Cause exacte :
-inconnue (temporaire).
+d'Unreal ou dans le log du jeu. Le message exact d'Unreal n'était pas lisible dans le dump.
+
+Le 25 octobre, le launcher n'a trouvé **aucun log Unreal** pour ce jeu, ni à l'emplacement habituel
+(`AppData\Local\SpeciesUnknown\Saved\Logs`), ni dans le dossier d'installation (vérifié : pas de
+dossier `Saved`). Beaucoup de jeux Unreal en version finale (« Shipping ») n'écrivent pas de log ;
+c'est peut-être le cas ici, sans certitude, car tous les dossiers d'`AppData` n'ont pas pu être
+vérifiés. Le launcher cherche maintenant à plus d'endroits, y compris les rapports du Crash Reporter
+d'Unreal. Cause exacte : inconnue (temporaire).
 
 **Constat annexe, lui établi :** la recherche de profondeur d'Optical F5Low n'a **jamais** trouvé la
 profondeur de ce jeu. Le log dit « *none qualifies* » dans 841 rapports sur 871, et compte 0 image
@@ -105,7 +110,8 @@ retire une source de surcharge. On ne sait pas si elle a joué un rôle dans le 
 
 ## À faire
 
-- Lire le log d'Unreal de la session Species: Unknown, et confirmer ou corriger l'interprétation de
-  `0x8000`.
+- Rejouer à Species: Unknown sans la recherche de profondeur. La fiche, faite automatiquement au
+  reset, dira si un log ou un rapport de crash d'Unreal existe. Ensuite, confirmer ou corriger
+  l'interprétation de `0x8000`.
 - Refaire Cyberpunk 2077 avec la RR coupée, puis avec la RR et le « profil sûr RR », pour savoir si
   le schéma se confirme.

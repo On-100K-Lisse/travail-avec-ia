@@ -354,9 +354,9 @@ namespace Dlss5Launcher
             File.Move(tmp, FileOf(exeDir));
         }
 
-        public static Manifest Load(string exeDir)
+        public static Manifest Load(string exeDir) { return LoadFile(FileOf(exeDir)); }
+        public static Manifest LoadFile(string f)
         {
-            string f = FileOf(exeDir);
             if (!File.Exists(f)) return null;
             var m = new Manifest();
             foreach (var line in File.ReadAllLines(f, Encoding.UTF8))
@@ -664,8 +664,11 @@ namespace Dlss5Launcher
                 }
             }
             // log du moteur (Unreal / Unity) : copié seulement, jamais touché
+            int ei = 0;
             foreach (var f in EngineLogs.EngineLogFiles(g))
-                try { Directory.CreateDirectory(dest); File.Copy(f, Path.Combine(dest, "moteur_" + Path.GetFileName(f)), true); any = true; } catch { }
+                try { Directory.CreateDirectory(dest); File.Copy(f, Path.Combine(dest, "moteur_" + (ei++ == 0 ? "" : ei + "_") + Path.GetFileName(f)), true); any = true; } catch { }
+            // le manifeste aussi : une fiche faite APRÈS le reset saura quelle méthode / quel GPU étaient en place
+            try { if (File.Exists(Manifest.FileOf(exeDir))) { Directory.CreateDirectory(dest); File.Copy(Manifest.FileOf(exeDir), Path.Combine(dest, "manifest.tsv"), true); } } catch { }
             return any ? dest : null;
         }
 
@@ -837,6 +840,32 @@ namespace Dlss5Launcher
     // ------------------------------------------------------------------ fiche de test (documentation)
     public static class Report
     {
+        // journal archivé sans manifeste (anciennes versions) : on déduit la méthode d'après les INI
+        public static Manifest InferFromArchive(string dir)
+        {
+            string oi = Path.Combine(dir, "OptiScaler.ini"), ri = Path.Combine(dir, "ReShade.ini");
+            if (File.Exists(oi))
+            {
+                bool feeder = (Ini.Get(Ini.ReadFile(oi), "DlssNr", "NativeMotion") ?? "").ToLowerInvariant() == "true";
+                return new Manifest { Mode = feeder ? "FEEDER" : "OPTISCALER", Proxy = "?", Date = "?", Complete = true };
+            }
+            if (File.Exists(ri))
+            {
+                bool feeder = Ini.Get(Ini.ReadFile(ri), "RenoDX.DLSS5", "NREnableUpscaling") == "0";
+                return new Manifest { Mode = feeder ? "FEEDER_RESHADE" : "RENODX", Proxy = "?", Date = "?", Complete = true };
+            }
+            return null;
+        }
+
+        // dernier dossier de journaux/<jeu> qui contient un log
+        public static string LatestArchive(Game g)
+        {
+            string d = Path.Combine(AppPaths.Journaux, Installer.Safe(g.Name));
+            if (!Directory.Exists(d)) return null;
+            return Directory.GetDirectories(d).OrderByDescending(x => x)
+                .FirstOrDefault(x => File.Exists(Path.Combine(x, "OptiScaler.log")) || File.Exists(Path.Combine(x, "ReShade.log")) || File.Exists(Path.Combine(x, "nr_port.log")));
+        }
+
         static string ReadShared(string p)
         {
             if (!File.Exists(p)) return null;
@@ -845,11 +874,10 @@ namespace Dlss5Launcher
         }
 
         // Lecture des logs pour dire en clair ce qui s'est passé.
-        public static List<string> Diagnose(Game g)
+        public static List<string> Diagnose(Game g) { return Diagnose(g, g.ExeDir, g.Installed); }
+        public static List<string> Diagnose(Game g, string dir, Manifest m)
         {
             var h = new List<string>();
-            var m = g.Installed;
-            string dir = g.ExeDir;
             if (m == null) { h.Add("Rien d'installé par le launcher."); return h; }
             string rs = ReadShared(Path.Combine(dir, "ReShade.log")), os = ReadShared(Path.Combine(dir, "OptiScaler.log")), fl = ReadShared(Path.Combine(dir, "dlss5-feed.log"));
             if (m.Mode == "RENODX" || m.Mode == "FEEDER_RESHADE")
@@ -902,7 +930,7 @@ namespace Dlss5Launcher
                 if (ue.Success)
                 {
                     string c = ue.Groups[1].Value.ToUpperInvariant().TrimStart('0');
-                    if (c == "8000" && g.Engine == "Unreal") h.Add("CRASH : exception 0x8000 levée par Unreal Engine lui-même (son code « crash GPU »). Le détail est dans le log du moteur, plus bas.");
+                    if (c == "8000" && g.Engine == "Unreal") h.Add("CRASH : exception 0x8000 levée par Unreal Engine lui-même (son code « crash GPU », à confirmer). Le message exact serait dans le log du moteur, si le jeu en écrit un : voir plus bas.");
                     else if (c == "8001" && g.Engine == "Unreal") h.Add("CRASH : exception 0x8001 d'Unreal (manque de mémoire). Baisse la résolution du modèle ou les textures du jeu.");
                     else h.Add("CRASH : exception non gérée 0x" + c + " (un OptiScaler_crash.dmp a été écrit si l'option est cochée).");
                 }
@@ -935,6 +963,16 @@ namespace Dlss5Launcher
         {
             var sb = new StringBuilder();
             var m = g.Installed;
+            string dir = g.ExeDir, archive = null; bool inferred = false;
+            if (m == null)
+            {   // rien d'installé (déjà réinitialisé) : on prend le dernier journal archivé de ce jeu
+                archive = LatestArchive(g);
+                if (archive != null)
+                {
+                    dir = archive; m = Manifest.LoadFile(Path.Combine(archive, "manifest.tsv"));
+                    if (m == null) { m = InferFromArchive(archive); inferred = m != null; }
+                }
+            }
             sb.AppendLine("# Fiche de test DLSS 5 — " + g.Name);
             sb.AppendLine();
             sb.AppendLine("- Date : " + DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
@@ -942,14 +980,17 @@ namespace Dlss5Launcher
             sb.AppendLine("- Magasin : " + g.Store + (g.AppId != null ? " (AppID " + g.AppId + ")" : ""));
             sb.AppendLine("- Exe : `" + g.ExePath + "`");
             sb.AppendLine("- API détectée : " + g.ApiText + " — Upscalers : " + g.UpscalerText);
-            if (m != null) sb.AppendLine("- Mode : **" + m.ModeLabel + "** — proxy `" + m.Proxy + "` — installé le " + m.Date + (string.IsNullOrEmpty(m.GpuMode) ? "" : " — " + m.GpuMode));
+            if (m != null && inferred) sb.AppendLine("- Mode : **" + m.ModeLabel + "** (déduit des INI archivés : ce journal date d'une version du launcher qui ne gardait pas le manifeste)");
+            else if (m != null) sb.AppendLine("- Mode : **" + m.ModeLabel + "** — proxy `" + m.Proxy + "` — installé le " + m.Date + (string.IsNullOrEmpty(m.GpuMode) ? "" : " — " + m.GpuMode));
+            else if (archive != null) sb.AppendLine("- Mode : inconnu (journal archivé par une ancienne version du launcher, sans manifeste)");
             else sb.AppendLine("- Mode : (rien d'installé par le launcher)");
+            if (archive != null) sb.AppendLine("- **Source : journal archivé le " + Path.GetFileName(archive).Replace("_avant-reset", "").Replace("_", " à ") + "**, juste avant la réinitialisation (`" + archive + "`)");
             if (g.Note != null) sb.AppendLine("- Note connue : " + g.Note);
             sb.AppendLine();
 
-            string dir = g.ExeDir;
             sb.AppendLine("## Fichiers installés (SHA-256)");
             sb.AppendLine();
+            if (archive != null) sb.AppendLine("(déjà retirés par la réinitialisation — voir la fiche faite automatiquement avant le reset, s'il y en a une)");
             foreach (var f in new[] { "nvngx_dlssnr.dll", "nvngx.dll_dlssnr.dll", m != null ? m.Proxy : null, "renodx-dlss5.addon64" })
             {
                 if (string.IsNullOrEmpty(f)) continue;
@@ -984,7 +1025,7 @@ namespace Dlss5Launcher
             sb.AppendLine();
             sb.AppendLine("```");
             bool found = false;
-            foreach (var lf in new[] { "OptiScaler.log", "ReShade.log", "dlss5-feed.log" })
+            foreach (var lf in new[] { "OptiScaler.log", "ReShade.log", "dlss5-feed.log", "nr_port.log" })
             {
                 string p = Path.Combine(dir, lf);
                 if (!File.Exists(p)) continue;
@@ -1013,6 +1054,17 @@ namespace Dlss5Launcher
                 sb.AppendLine();
             }
             var elogs = EngineLogs.EngineLogFiles(g);
+            if (archive != null && elogs.Count == 0)
+                elogs = Directory.GetFiles(archive, "moteur_*").ToList();
+            if (elogs.Count == 0 && g.Engine != null)
+            {
+                sb.AppendLine("## Log du moteur du jeu (" + g.Engine + ")");
+                sb.AppendLine();
+                sb.AppendLine("Introuvable. Beaucoup de jeux " + g.Engine + " en version finale n'écrivent pas de log. Cherché dans :");
+                sb.AppendLine();
+                foreach (var p in EngineLogs.LastSearched.Distinct().Take(12)) sb.AppendLine("- `" + p + "`");
+                sb.AppendLine();
+            }
             if (elogs.Count > 0)
             {
                 sb.AppendLine("## Log du moteur du jeu (" + g.Engine + ")");
@@ -1030,7 +1082,9 @@ namespace Dlss5Launcher
             }
             sb.AppendLine("## Diagnostic automatique");
             sb.AppendLine();
-            foreach (var h in Diagnose(g)) sb.AppendLine("- " + h);
+            foreach (var h in Diagnose(g, dir, m)) sb.AppendLine("- " + h);
+            if (archive != null && File.Exists(Path.Combine(archive, "OptiScaler_crash.dmp")))
+                sb.AppendLine("- Un dump de crash (`OptiScaler_crash.dmp`) est dans le journal archivé : à garder pour l'analyse.");
             sb.AppendLine();
             sb.AppendLine("## Résultats observés (à remplir)");
             sb.AppendLine();

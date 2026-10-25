@@ -643,6 +643,7 @@ namespace Dlss5Launcher
             return null;
         }
         // Logs du moteur lui-même (le détail des crashs GPU y est, pas dans OptiScaler.log)
+        public static readonly List<string> LastSearched = new List<string>();
         public static List<string> EngineLogFiles(Game g)
         {
             var res = new List<string>();
@@ -650,6 +651,7 @@ namespace Dlss5Launcher
             {
                 string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 if (string.IsNullOrEmpty(local) || g.ExePath == null) return res;
+                LastSearched.Clear();
                 if (g.Engine == "Unreal")
                 {
                     var names = new List<string>();
@@ -657,11 +659,48 @@ namespace Dlss5Launcher
                     if (m.Success) names.Add(m.Groups[1].Value);
                     var bin = Path.GetDirectoryName(Path.GetDirectoryName(g.ExeDir));
                     if (bin != null) names.Add(Path.GetFileName(bin));
-                    foreach (var n in names.Distinct())
+                    // Les jeux Unreal ne rangent pas tous leurs logs au même endroit : on essaie les emplacements courants.
+                    string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    string user = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    var bases = new List<string> { local };
+                    if (!string.IsNullOrEmpty(docs)) { bases.Add(Path.Combine(docs, "My Games")); bases.Add(docs); }
+                    if (!string.IsNullOrEmpty(user)) bases.Add(Path.Combine(user, "Saved Games"));
+                    // nom du jeu « nettoyé » (Species: Unknown -> SpeciesUnknown) et dossiers de LOCALAPPDATA qui y ressemblent
+                    string norm = Regex.Replace(g.Name ?? "", @"[^A-Za-z0-9]", "").ToLowerInvariant();
+                    if (norm.Length >= 4) names.Add(Regex.Replace(g.Name, @"[^A-Za-z0-9]", ""));
+                    try
                     {
-                        string logs = Path.Combine(local, n, "Saved", "Logs");
-                        if (Directory.Exists(logs)) res.AddRange(Directory.GetFiles(logs, "*.log").OrderByDescending(File.GetLastWriteTimeUtc).Take(2));
+                        foreach (var d in Directory.GetDirectories(local))
+                        {
+                            string dn = Regex.Replace(Path.GetFileName(d), @"[^A-Za-z0-9]", "").ToLowerInvariant();
+                            if (dn.Length >= 4 && names.Any(n => Regex.Replace(n, @"[^A-Za-z0-9]", "").ToLowerInvariant() == dn || (norm.Length >= 4 && (dn == norm || dn.StartsWith(norm) || norm.StartsWith(dn)))))
+                                names.Add(Path.GetFileName(d));
+                        }
                     }
+                    catch { }
+                    foreach (var bs in bases)
+                        foreach (var n in names.Distinct(StringComparer.OrdinalIgnoreCase))
+                        {
+                            string saved = Path.Combine(bs, n, "Saved");
+                            LastSearched.Add(saved);
+                            string logs = Path.Combine(saved, "Logs");
+                            if (Directory.Exists(logs)) res.AddRange(Directory.GetFiles(logs, "*.log").OrderByDescending(File.GetLastWriteTimeUtc).Take(2));
+                            string crashes = Path.Combine(saved, "Crashes");
+                            if (Directory.Exists(crashes))
+                            {   // dernier rapport du Crash Reporter d'Unreal : son log et son CrashContext (message d'erreur)
+                                var last = Directory.GetDirectories(crashes).OrderByDescending(Directory.GetLastWriteTimeUtc).FirstOrDefault();
+                                if (last != null)
+                                {
+                                    res.AddRange(Directory.GetFiles(last, "*.log"));
+                                    res.AddRange(Directory.GetFiles(last, "CrashContext.runtime-xml"));
+                                }
+                            }
+                        }
+                    // logs dans le dossier d'installation (rare)
+                    string inst = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(g.ExeDir)) ?? g.Root, "Saved", "Logs");
+                    LastSearched.Add(inst);
+                    if (Directory.Exists(inst)) res.AddRange(Directory.GetFiles(inst, "*.log").OrderByDescending(File.GetLastWriteTimeUtc).Take(2));
+                    res = res.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 }
                 else if (g.Engine == "Unity")
                 {
@@ -674,6 +713,7 @@ namespace Dlss5Launcher
                         if (l.Length >= 2)
                         {
                             string dir = Path.Combine(low, Clean(l[0].Trim()), Clean(l[1].Trim()));
+                            LastSearched.Add(dir);
                             foreach (var f in new[] { "Player.log", "Player-prev.log" }) if (File.Exists(Path.Combine(dir, f))) res.Add(Path.Combine(dir, f));
                         }
                     }
@@ -697,7 +737,7 @@ namespace Dlss5Launcher
             }
             catch { }
             if (t == null) return hits;
-            var rx = new Regex(@"GPU ?crash|device (removed|hung|lost)|DXGI_ERROR|out of (video )?memory|Fatal error|Unhandled Exception|Assertion failed|LogD3D12RHI: Error|LogRHI: Error|D3D12 call|d3d1[12]: .*(removed|failed)|Crash in runnable|EXCEPTION_ACCESS_VIOLATION", RegexOptions.IgnoreCase);
+            var rx = new Regex(@"<ErrorMessage>|GPU ?crash|device (removed|hung|lost)|DXGI_ERROR|out of (video )?memory|Fatal error|Unhandled Exception|Assertion failed|LogD3D12RHI: Error|LogRHI: Error|D3D12 call|d3d1[12]: .*(removed|failed)|Crash in runnable|EXCEPTION_ACCESS_VIOLATION", RegexOptions.IgnoreCase);
             foreach (var line in t.Replace("\r\n", "\n").Split('\n'))
                 if (rx.IsMatch(line)) hits.Add(line.Length > 240 ? line.Substring(0, 240) + "…" : line);
             return hits.Skip(Math.Max(0, hits.Count - max)).ToList();

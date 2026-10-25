@@ -116,6 +116,9 @@ bleu = installé, orange = autre mod présent, rouge = anti-cheat, gris = non co
 
 - Le détail du jeu affiche le **coût réel du NR** de la dernière session, lu dans
   `OptiScaler.log`, avec un conseil.
+- **Réinitialiser crée automatiquement une fiche de test juste avant le reset**. Une fiche faite
+  après un reset lit le dernier journal archivé du jeu. On peut donc réinitialiser dès qu'un problème
+  arrive, sans perdre les informations.
 - La **fiche de test** est un fichier Markdown qui contient :
   - le jeu, l'API, la méthode, la carte graphique et la DLL NR utilisée ;
   - le hash des DLL installées et les réglages actifs ;
@@ -210,10 +213,10 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 ### Tests
 
-[`tests/Test.cs`](tests/Test.cs) contient **107 vérifications automatiques**. Elles tournent sur de
+[`tests/Test.cs`](tests/Test.cs) contient **110 vérifications automatiques**. Elles tournent sur de
 faux jeux, avec un faux payload : installation, réglages, réinitialisation identique au hash près,
 nettoyage d'un 1-Click et d'une installation manuelle, détection Unity / Unreal, mode AMD, RTX 50,
-diagnostic de crash. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+diagnostic de crash, fiche de test faite après un reset. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
 mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs   # + les -r: ci-dessus

@@ -334,6 +334,22 @@ class T {
       Ok(File.Exists(Path.Combine(ul2,"SpeciesUnknown.log")),"log Unreal d'origine laissé en place");
       Directory.Delete(Path.Combine(local,"SpeciesUnknown"),true);
     }
+    // ===== FICHE APRÈS RESET =====
+    Console.WriteLine("-- fiche apres reset --");
+    {
+      string ar2=Path.Combine(work,"arch1"); var ab2=Path.Combine(ar2,"Jeu","Binaries","Win64"); Directory.CreateDirectory(ab2);
+      File.Copy(exe,Path.Combine(ab2,"Jeu-Win64-Shipping.exe"));
+      var gg=new Game{Name="Jeu Archive "+Guid.NewGuid().ToString("N").Substring(0,6),Root=ar2}; Scanner.Analyze(gg);
+      new Installer(gg).Install(InstallMode.Feeder,new NrSettings(),null); Scanner.Analyze(gg);
+      File.WriteAllText(Path.Combine(gg.ExeDir,"OptiScaler.log"),"[x] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 6.00 ms total, 5 ms model\n[x] [I] Native motion frames: of 10 presents\n[23:34:07.1] [C] Unhandled exception 8000 at 7FF, writing x\n");
+      File.WriteAllText(Path.Combine(gg.ExeDir,"OptiScaler_crash.dmp"),"dmp");
+      new Installer(gg).Reset(); Scanner.Analyze(gg);
+      var la=Report.LatestArchive(gg);
+      Ok(la!=null && File.Exists(Path.Combine(la,"manifest.tsv")) && File.Exists(Path.Combine(la,"OptiScaler_crash.dmp")),"reset : journal archivé avec le manifeste et le dump");
+      var fr=File.ReadAllText(Report.Write(gg,"RTX"));
+      Ok(fr.Contains("Source : journal archivé") && fr.Contains("Feeder F5Low") && fr.Contains("NativeMotion=true"),"fiche APRÈS reset : méthode et réglages retrouvés dans le journal");
+      Ok(fr.Contains("NR ≈ 6") && fr.Contains("0x8000") && fr.Contains("dump de crash"),"fiche APRÈS reset : coût NR, crash et dump retrouvés");
+    }
     // 5. 32-bit refusé
     Console.WriteLine(fails==0?"\nTOUS LES TESTS PASSENT":"\n"+fails+" ÉCHEC(S)");
   }

@@ -648,8 +648,9 @@ namespace Dlss5Launcher
             details.Text = string.Join("\r\n", lines);
             try
             {
-                var pf = g.Installed != null ? Perf.Read(g.ExeDir) : null;
-                if (pf != null && pf.Samples > 0) { lines.Add("Dernière session : " + pf.Summary()); lines.Add("→ " + pf.Advice()); details.Text = string.Join("\r\n", lines); }
+                string arch = g.Installed == null ? Report.LatestArchive(g) : null;
+                var pf = g.Installed != null ? Perf.Read(g.ExeDir) : arch != null ? Perf.Read(arch) : null;
+                if (pf != null && pf.Samples > 0) { lines.Add((arch != null ? "Dernière session (journal archivé) : " : "Dernière session : ") + pf.Summary()); lines.Add("→ " + pf.Advice()); details.Text = string.Join("\r\n", lines); }
             }
             catch { }
             lblNote.Text = g.Note ?? "";
@@ -729,16 +730,22 @@ namespace Dlss5Launcher
             var g = selected; if (g == null || busy) return;
             if (g.Installed == null || g.OneClickInstalled) { DoClean(g); return; }
             if (Ask("Réinitialiser " + g.Name + " ?\n\nLe launcher enlève ce qu'il a ajouté, remet les fichiers d'origine (vérifiés par hash) et archive les logs dans « journaux ».", MessageBoxIcon.Question) != DialogResult.Yes) return;
-            List<string> errs = null;
-            RunJob("Réinitialisation de " + g.Name + "…", () => { errs = new Installer(g).Reset(); }, g,
+            List<string> errs = null; string autoFiche = null;
+            RunJob("Réinitialisation de " + g.Name + "…", () =>
+                {
+                    // la fiche de test est faite AVANT le reset : logs, réglages et DLL sont encore en place
+                    try { autoFiche = Report.Write(g, gpuText); } catch (Exception ex) { Log.W("Fiche automatique impossible : " + ex.Message); }
+                    errs = new Installer(g).Reset();
+                }, g,
                 () =>
                 {
+                    string fm = autoFiche != null ? "\n\nFiche de test créée automatiquement avant le reset :\n" + Path.GetFileName(autoFiche) : "";
                     if ((errs == null || errs.Count == 0) && (g.CleanPlan.Count > 0 || g.OneClickInstalled))
                     {
                         if (Ask("Installation du launcher défaite.\n\nIl reste des traces d'autres mods ou launchers dans ce jeu (" + Math.Max(1, g.CleanPlan.Count) + " élément(s)).\nLes nettoyer aussi ?", MessageBoxIcon.Question) == DialogResult.Yes) DoClean(g);
                         return;
                     }
-                    if (errs == null || errs.Count == 0) Info("Dossier de " + g.Name + " remis comme avant. Les logs ont été archivés dans « journaux ».");
+                    if (errs == null || errs.Count == 0) Info("Dossier de " + g.Name + " remis comme avant. Les logs ont été archivés dans « journaux »." + fm);
                     else Error("Réinitialisation partielle — " + errs.Count + " problème(s) :\n\n" + string.Join("\n", errs.Take(12)) +
                                "\n\nLe manifeste garde ce qui reste à défaire : ferme tout programme qui utilise le jeu et réessaie." +
                                (g.Store == "Steam" ? "\nEn dernier recours : Steam → Propriétés → Fichiers installés → Vérifier l'intégrité." : ""));
@@ -760,10 +767,14 @@ namespace Dlss5Launcher
             }
             sb.AppendLine("\nTout est récupérable avec « Annuler le nettoyage ». Continuer ?");
             if (Ask(sb.ToString(), MessageBoxIcon.Question) != DialogResult.Yes) return;
-            CleanResult res = null;
-            RunJob("Nettoyage de " + g.Name + "…", () => { res = Cleaner.Clean(g); }, g, () =>
+            CleanResult res = null; string autoFiche2 = null;
+            RunJob("Nettoyage de " + g.Name + "…", () =>
             {
-                string msg = "Nettoyage terminé : " + res.Moved + " élément(s) en quarantaine" + (res.Restored > 0 ? ", " + res.Restored + " original(aux) du jeu remis" : "") + ".";
+                if (g.Installed != null) try { autoFiche2 = Report.Write(g, gpuText); } catch { }
+                res = Cleaner.Clean(g);
+            }, g, () =>
+            {
+                string msg = (autoFiche2 != null ? "Fiche de test créée automatiquement avant le reset : " + Path.GetFileName(autoFiche2) + "\n\n" : "") + "Nettoyage terminé : " + res.Moved + " élément(s) en quarantaine" + (res.Restored > 0 ? ", " + res.Restored + " original(aux) du jeu remis" : "") + ".";
                 if (res.Errors.Count > 0) msg += "\n\nÀ vérifier :\n" + string.Join("\n", res.Errors.Take(10));
                 if (res.NeedValidate && g.Store == "Steam" && g.AppId != null)
                 {

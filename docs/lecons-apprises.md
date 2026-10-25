@@ -84,9 +84,16 @@ documentation sépare ce qui est **établi** de ce qui est **supposé**. Voir
 - **Leçon pratique :** activer le dump de crash avant d'en avoir besoin. C'est lui qui a permis de
   voir que le crash de Species: Unknown venait d'Unreal lui-même et non d'OptiScaler.
 
-## 7. Les tests automatiques ne remplacent pas le jeu
+## 7. L'outil doit suivre la façon de travailler de son utilisateur
 
-Le launcher a 107 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
+Le premier modèle supposait qu'on fait la fiche de test, puis qu'on réinitialise. En pratique,
+On-100-K-Lisse réinitialise dès que quelque chose cloche, et en parle ensuite. La fiche faite après
+le reset était vide. Plutôt que de demander de changer d'habitude, le launcher fait maintenant la
+fiche tout seul avant le reset, et sait relire les journaux archivés après.
+
+## 8. Les tests automatiques ne remplacent pas le jeu
+
+Le launcher a 110 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
 erreurs : ordre de restauration, fichiers oubliés, mauvais réglages d'INI. Mais aucun de ces tests
 n'aurait trouvé les leçons 1, 2, 3 et 5 : il a fallu Windows, un vrai jeu et un humain devant
 l'écran.
