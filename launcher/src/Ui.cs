@@ -98,7 +98,7 @@ namespace Dlss5Launcher
         Button bImport, bMakeDefault, bResetProfile;
         static string ProfilesDir { get { return Path.Combine(AppPaths.Root, "profils"); } }
         static string ProfilePath(Game g) { return Path.Combine(ProfilesDir, Installer.Safe(g.Name) + ".ini"); }
-        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo;
+        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo, bHistory;
         Panel pageJeu, pageReglages, pageJournal;
         Button tabJeu, tabReglages, tabJournal;
         ProgressBar progress;
@@ -280,7 +280,9 @@ namespace Dlss5Launcher
             bJournaux = Theme.Btn("Journaux archivés", Theme.Line, 150); bJournaux.Click += (s, e) => { Directory.CreateDirectory(AppPaths.Journaux); Process.Start("explorer.exe", "\"" + AppPaths.Journaux + "\""); };
             bUndo = Theme.Btn("Annuler le nettoyage", Theme.Orange, 150); bUndo.Click += (s, e) => DoUndo();
             tips.SetToolTip(bUndo, "Remet en place les fichiers que le dernier nettoyage a mis en quarantaine\n(dossier « quarantaine » du launcher).");
-            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bJournaux, bUndo });
+            bHistory = Theme.Btn("📈  Historique", Theme.Blue, 150); bHistory.Click += (s, e) => ShowHistory(selected);
+            tips.SetToolTip(bHistory, "Toutes tes parties de ce jeu : durée, coût NR, preset, DLL, crash.\nCompare les montages entre eux (ex. Preset A contre Preset B).\nFichier complet : historique.csv (s'ouvre dans Excel).");
+            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bHistory, bJournaux, bUndo });
             tips.SetToolTip(bReport, "Crée une fiche Markdown (jeu, mode, hashes, réglages, extrait du log)\ndans le dossier fiches-de-test — pratique pour ta documentation.");
             tips.SetToolTip(bReset, "Remet le dossier du jeu exactement comme avant l'installation,\nd'après le manifeste. Les logs sont archivés avant.");
 
@@ -603,6 +605,12 @@ namespace Dlss5Launcher
                     Log.W("Scan terminé : " + games.Count + " jeux — " + c + " compatibles, " + a + " à tester, " + ins + " installés.");
                     SetBusy(false, games.Count + " jeux  ·  " + c + " compatibles  ·  " + a + " à tester  ·  " + ins + " installés");
                     if (keep != null) Select(games.FirstOrDefault(x => x.ExePath == keep || x.Root == keep));
+                    var snapshot = games.ToList();
+                    new Thread(() =>
+                    {   // historique : reprend les journaux pas encore notés et la dernière partie des jeux installés
+                        try { int n = History.Backfill(snapshot); if (n > 0) Log.W("Historique : " + n + " partie(s) notée(s) ou mise(s) à jour."); BeginInvoke((Action)ShowGame); }
+                        catch (Exception ex) { Log.W("Historique : " + ex.Message); }
+                    }) { IsBackground = true }.Start();
                 }));
             }) { IsBackground = true };
             t.Start();
@@ -635,6 +643,7 @@ namespace Dlss5Launcher
             var g = selected;
             bool has = g != null;
             foreach (var b in new[] { bInstall, bReset, bLaunch, bFolder, bLog, bReport, bImport, bResetProfile, bUndo }) if (b != null) b.Enabled = has && !busy;
+            if (bHistory != null) bHistory.Enabled = true;
             if (!has)
             {
                 lblGame.Text = "Choisis un jeu dans la liste"; lblStatus.Text = ""; lblNote.Text = "";
@@ -665,6 +674,13 @@ namespace Dlss5Launcher
                 string arch = g.Installed == null ? Report.LatestArchive(g) : null;
                 var pf = g.Installed != null ? Perf.Read(g.ExeDir) : arch != null ? Perf.Read(arch) : null;
                 if (pf != null && pf.Samples > 0) { lines.Add((arch != null ? "Dernière session (journal archivé) : " : "Dernière session : ") + pf.Summary()); lines.Add("→ " + pf.Advice()); details.Text = string.Join("\r\n", lines); }
+                var hist = History.For(g);
+                if (hist.Count > 0)
+                {
+                    int cr = hist.Count(x => x.Crashed);
+                    lines.Add("Historique : " + hist.Count + " partie" + (hist.Count > 1 ? "s" : "") + ", " + History.Hours(hist.Sum(x => x.Minutes)) + (cr > 0 ? ", " + cr + " crash" + (cr > 1 ? "s" : "") : ", aucun crash détecté") + "  (bouton « Historique »)");
+                    details.Text = string.Join("\r\n", lines);
+                }
             }
             catch { }
             lblNote.Text = g.Note ?? "";
@@ -930,6 +946,7 @@ namespace Dlss5Launcher
         void LaunchGame()
         {
             var g = selected; if (g == null) return;
+            History.RecordLive(g);   // le prochain lancement écrase OptiScaler.log : on note la partie d'avant
             try
             {
                 if (g.Store == "Steam" && g.AppId != null) Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true });
@@ -962,6 +979,56 @@ namespace Dlss5Launcher
                 if (!customFolders.Contains(d.SelectedPath, StringComparer.OrdinalIgnoreCase)) customFolders.Add(d.SelectedPath);
                 SaveConfig(); StartScan();
             }
+        }
+
+        // =============================================================== historique
+        void ShowHistory(Game g)
+        {
+            var f = new Form { Text = "Historique des parties", Width = 1180, Height = 640, StartPosition = FormStartPosition.CenterParent, BackColor = Theme.Panel, ForeColor = Theme.Text, Font = Theme.UI, MinimizeBox = false, ShowIcon = false };
+            var box = new TextBox { Multiline = true, ReadOnly = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Both, WordWrap = false, BackColor = Color.FromArgb(14, 16, 19), ForeColor = Theme.Text, Font = Theme.Mono, BorderStyle = BorderStyle.None };
+            var bar = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 50, BackColor = Theme.Panel, Padding = new Padding(10, 8, 10, 0) };
+            var bAll = Theme.Btn(g == null ? "Ce jeu" : "Tous les jeux", Theme.Line, 150);
+            var bCsv = Theme.Btn("Ouvrir historique.csv", Theme.Green, 190);
+            var bCopy = Theme.Btn("Copier", Theme.Blue, 110);
+            var bClose = Theme.Btn("Fermer", Theme.Line, 110);
+            bar.Controls.AddRange(new Control[] { bAll, bCsv, bCopy, bClose });
+            bAll.Visible = g != null;
+            f.Controls.Add(box); f.Controls.Add(bar);
+            bool all = g == null;
+            Action fill = () =>
+            {
+                var sb = new System.Text.StringBuilder();
+                var everything = History.Load();
+                var groups = all ? everything.GroupBy(x => x.Game).OrderBy(x => x.Key).ToList()
+                                 : everything.Where(x => x.Key.StartsWith(Installer.Safe(g.Name) + "|", StringComparison.Ordinal)).GroupBy(x => x.Game).ToList();
+                if (groups.Count == 0) sb.AppendLine(all ? "Aucune partie notée pour l'instant." : "Aucune partie notée pour " + g.Name + ".\r\n\r\nUne partie entre dans l'historique quand le launcher retrouve son OptiScaler.log : au démarrage, au reset,\r\nà la fiche de test, ou juste avant « Lancer le jeu ».");
+                foreach (var grp in groups)
+                {
+                    var l = grp.OrderBy(x => x.Start).ToList();
+                    sb.AppendLine("■ " + grp.Key + " — " + l.Count + " partie" + (l.Count > 1 ? "s" : "") + ", " + History.Hours(l.Sum(x => x.Minutes)) + " de jeu");
+                    sb.AppendLine();
+                    sb.AppendLine("  Par montage :");
+                    foreach (var c in History.Compare(l)) sb.AppendLine("    " + c);
+                    sb.AppendLine();
+                    sb.AppendLine("  Parties :");
+                    foreach (var x in l) sb.AppendLine("    " + History.Line(x));
+                    sb.AppendLine();
+                }
+                sb.AppendLine("Seules les parties avec OptiScaler (OptiScaler F5, Feeder F5Low) sont notées : le launcher ne lit pas encore le coût NR");
+                sb.AppendLine("dans les logs de RenoDX et du Feeder ReShade. OptiScaler réécrit son log à chaque lancement : deux parties jouées sans repasser");
+                sb.AppendLine("par le launcher (démarrage, « Lancer le jeu », fiche ou reset) n'en font qu'une, la dernière.");
+                box.Text = sb.ToString();
+                box.SelectionLength = 0;
+                f.Text = all ? "Historique — tous les jeux" : "Historique — " + g.Name;
+            };
+            bAll.Click += (s, e) => { if (g == null) return; all = !all; bAll.Text = all ? "Ce jeu" : "Tous les jeux"; fill(); };
+            bCsv.Click += (s, e) => { try { if (File.Exists(History.FilePath)) Process.Start(new ProcessStartInfo(History.FilePath) { UseShellExecute = true }); else Info("Pas encore d'historique."); } catch (Exception ex) { Error(ex.Message); } };
+            bCopy.Click += (s, e) => { try { Clipboard.SetText(box.Text); bCopy.Text = "Copié ✓"; } catch { } };
+            bClose.Click += (s, e) => f.Close();
+            if (g != null && g.Installed != null) History.RecordLive(g);
+            fill();
+            f.Shown += (s, e) => { box.SelectionLength = 0; bClose.Focus(); };
+            f.ShowDialog(this);
         }
 
         // =============================================================== docteur payload

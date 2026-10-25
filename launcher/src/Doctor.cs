@@ -156,12 +156,14 @@ namespace Dlss5Launcher
                     else
                     {
                         string sha = ShaOf(p);
-                        string ver = FileVersion(p);
+                        bool ok = sha.Equals(s.Sha, StringComparison.OrdinalIgnoreCase);
+                        // un fichier abîmé n'est jamais passé à la lecture des infos de version (Mono y plante)
+                        string trunc = !ok && IsBinary(p) ? PeProblem(p) : null;
+                        string ver = trunc == null ? FileVersion(p) : null;
                         it.Found = Short(sha) + (ver != null ? "  (v " + ver + ")" : "");
-                        if (sha.Equals(s.Sha, StringComparison.OrdinalIgnoreCase)) it.State = PState.Ok;
+                        if (ok) it.State = PState.Ok;
                         else
                         {
-                            string trunc = IsBinary(p) ? PeProblem(p) : null;
                             string known = KnownFiles.Identify(sha);
                             if (trunc != null) { it.State = PState.Abime; it.Detail = trunc; }
                             else if (known != null) { it.State = PState.AutreVersion; it.Detail = "c'est : " + known; }

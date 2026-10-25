@@ -755,6 +755,7 @@ namespace Dlss5Launcher
         public static bool IsAmdMode { get { return Vendor == "AMD" || Vendor == "Intel"; } }
         public static int Series;                  // 20, 30, 40, 50… (RTX), 0 si inconnu
         public static string ForceNr;              // "openNR" ou "origine" (launcher-config.ini : dllNr=…)
+        public static string Name;                 // nom de la carte (ex. « NVIDIA GeForce RTX 4070 »), pour l'historique
         // RTX 50 (Blackwell) et AMD/Intel : la 310.9.16 NVIDIA d'origine. RTX 20/30/40 : ta build OpenNR compat-fp16.
         public static bool UseOriginalNr
         {
@@ -794,6 +795,7 @@ namespace Dlss5Launcher
                                 Vendor = "NVIDIA";
                                 var sm = Regex.Match(desc, @"RTX\s*(?:PRO\s*)?(\d)0\d0", RegexOptions.IgnoreCase);
                                 Series = sm.Success ? int.Parse(sm.Groups[1].Value) * 10 : 0;
+                                Name = desc;
                                 return desc + (nv != null ? " — pilote " + nv : "");
                             }
                             if (amd == null && (desc.IndexOf("Radeon", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("AMD", StringComparison.OrdinalIgnoreCase) >= 0))
@@ -807,8 +809,8 @@ namespace Dlss5Launcher
                 }
             }
             catch { }
-            if (amd != null) { Vendor = "AMD"; return amd + " — mode AMD (port vendor-neutral)"; }
-            if (intel != null) { Vendor = "Intel"; return intel + " — mode Intel (port vendor-neutral)"; }
+            if (amd != null) { Vendor = "AMD"; Name = amd; return amd + " — mode AMD (port vendor-neutral)"; }
+            if (intel != null) { Vendor = "Intel"; Name = intel; return intel + " — mode Intel (port vendor-neutral)"; }
             Vendor = "?";
             return "Aucun GPU NVIDIA / AMD détecté";
         }

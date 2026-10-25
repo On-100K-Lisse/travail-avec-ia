@@ -138,3 +138,23 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
   25 octobre : ça fonctionne.
 - **Constat au passage :** ReShade dans le payload est bien la version 6.8.0. Le docteur la lit
   dans les infos du fichier.
+
+## 12. Historique des parties — 25 oct.
+
+- **Origine :** idée proposée par Kai, retenue avec On-100-K-Lisse : garder le coût NR de chaque
+  partie, et pas seulement celui de la dernière.
+- **Ajouts :**
+  - `historique.csv` : une ligne par partie (durée, carte, méthode, DLL, preset, modèle, coût NR
+    moyen / min / max / p95 / début / fin de partie, créations du modèle, crash) ;
+  - une partie est notée au démarrage, à la fiche de test, au reset et avant « Lancer le jeu »,
+    sans doublon ; les anciens journaux archivés sont repris ;
+  - bouton **Historique** : comparaison des montages d'un jeu (par exemple Preset A et Preset B),
+    liste des parties, et vue « Tous les jeux » ;
+  - une ligne d'historique dans le détail du jeu, et une section dans la fiche de test ;
+  - le manifeste note maintenant le nom de la carte graphique.
+- **Correctif au passage :** le docteur payload ne lit plus les infos de version d'une DLL coupée.
+  Sous Mono, cette lecture faisait planter les tests. Sous Windows, ce cas n'a pas été rencontré ; le
+  fichier est de toute façon déjà classé « abîmé ».
+- **Vérifié :** 141 vérifications automatiques, lancées trois fois de suite. Essai de la reprise sur
+  les vrais journaux d'On-100-K-Lisse (8 parties retrouvées), puis essai sous Windows par
+  On-100-K-Lisse le 25 octobre : ça fonctionne.

@@ -150,6 +150,7 @@ qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le
 
 - Le détail du jeu affiche le **coût réel du NR** de la dernière session, lu dans
   `OptiScaler.log`, avec un conseil.
+- **Historique des parties** : voir [plus bas](#lhistorique-des-parties).
 - **Réinitialiser crée automatiquement une fiche de test juste avant le reset**. Une fiche faite
   après un reset lit le dernier journal archivé du jeu. On peut donc réinitialiser dès qu'un problème
   arrive, sans perdre les informations.
@@ -158,11 +159,44 @@ qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le
   - le hash des DLL installées, avec le nom du fichier reconnu (par exemple « DLL NR OpenNR
     310.9.16 compat-fp16 »), même après un reset grâce au manifeste archivé ;
   - le verdict du docteur payload ;
+  - l'historique du jeu : comparaison des montages et dernières parties ;
   - les réglages actifs ;
   - le coût mesuré et un extrait du log ;
   - les erreurs du log du moteur (Unreal / Unity) ;
   - un **diagnostic automatique** : crash GPU (`DEVICE_HUNG`), exception d'Unreal, RR active,
     modèle reconstruit à répétition, profondeur jamais trouvée, port AMD sur le bon modèle…
+
+### L'historique des parties
+
+Le launcher garde une ligne par partie dans `historique.csv`, à côté de l'exe. Le fichier s'ouvre
+dans Excel : séparateur `;`, virgule décimale, encodage UTF-8 avec BOM pour les accents. Il reste
+sur le PC de l'utilisateur et n'est jamais copié dans une copie pour un ami.
+
+- **Ce qui est noté pour chaque partie :**
+  - début, fin, durée (lus dans les heures des lignes d'`OptiScaler.log`, y compris une partie qui
+    passe minuit) ;
+  - carte graphique, méthode, DLL NR (reconnue par son hash), preset, résolution du modèle ;
+  - coût NR : moyen, min, max, p95, et la moyenne du premier et du dernier quart des mesures, pour
+    voir si le coût monte pendant une longue partie ;
+  - nombre de créations du modèle, et le type de crash détecté (crash GPU, exception, perte du GPU
+    probable).
+- **Quand une partie est notée :** au démarrage du launcher, à la fiche de test, au reset, et juste
+  avant « Lancer le jeu ». Une partie déjà notée est mise à jour, jamais dupliquée : elle est
+  reconnue par le jeu et son heure de début. Les journaux archivés avant cette version sont repris
+  au premier démarrage.
+- **Le bouton « Historique »** regroupe les parties d'un jeu par montage (méthode, DLL, preset,
+  modèle) : nombre de parties, temps de jeu, coût moyen, crashs et temps de jeu par crash. C'est ce
+  qui permet de comparer, par exemple, Preset A et Preset B sur plusieurs parties. « Tous les
+  jeux » fait le même résumé pour chaque jeu.
+- **Limites :**
+  - OptiScaler réécrit son log à chaque lancement du jeu : deux parties jouées sans repasser par le
+    launcher n'en font qu'une, la dernière ;
+  - les journaux archivés par une version plus ancienne n'ont pas de manifeste : la carte et la DLL
+    y sont « inconnue » ;
+  - le premier quart des mesures peut contenir des menus, qui coûtent moins cher : une hausse en fin
+    de partie n'est pas forcément une dérive ;
+  - RenoDX et le Feeder ReShade ne sont pas encore notés : le launcher ne lit pas le coût NR dans
+    leurs logs.
 
 ### Cartes graphiques
 
@@ -234,7 +268,8 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 | `Install.cs` | Réglages et préréglages, génération des INI, manifeste, installation, réinitialisation, garde-fous de stabilité, mesure du coût NR, diagnostic, fiche de test, copie pour un ami |
 | `Cleaner.cs` | Réinitialisation universelle : manifeste du 1-Click, reconnaissance des restes de mods, quarantaine et annulation |
 | `Doctor.cs` | Docteur payload : hashs des fichiers connus, vérification du `payload\`, détection d'une DLL coupée, rapport |
-| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
+| `History.cs` | Historique des parties : lecture d'une partie dans `OptiScaler.log`, `historique.csv`, reprise des journaux archivés, comparaison des montages |
+| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, fenêtre d'historique, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
 | `COMPILER.bat` | Recompile l'exe avec le compilateur C# inclus dans Windows (`csc.exe` de .NET Framework 4) |
 
 ### Compiler
@@ -253,14 +288,15 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 ### Tests
 
-[`tests/Test.cs`](tests/Test.cs) contient **130 vérifications automatiques**. Elles tournent sur de
+[`tests/Test.cs`](tests/Test.cs) contient **141 vérifications automatiques**. Elles tournent sur de
 faux jeux, avec un faux payload : installation, réglages, réinitialisation identique au hash près,
 nettoyage d'un 1-Click et d'une installation manuelle, détection Unity / Unreal, mode AMD, RTX 50,
 diagnostic de crash, fiche de test faite après un reset, docteur payload (fichier coupé, vide,
-inconnu, autre version, mélange de versions) et copie pour un ami. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+inconnu, autre version, mélange de versions), copie pour un ami et historique (durée, partie qui
+passe minuit, crash, doublons, comparaison Preset A / B, reprise des journaux). Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
-mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs   # + les -r: ci-dessus
+mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs src/History.cs   # + les -r: ci-dessus
 mono test.exe <un exe 64-bit quelconque> <un dxgi.dll de ReShade> <dossier de travail vide>
 ```
 

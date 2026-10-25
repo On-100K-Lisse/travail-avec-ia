@@ -316,7 +316,7 @@ namespace Dlss5Launcher
 
     public class Manifest
     {
-        public string Mode = "", Proxy = "", Date = "", Exe = "", GpuMode = "";
+        public string Mode = "", Proxy = "", Date = "", Exe = "", GpuMode = "", Card = "";
         public bool Complete;
         public List<ManEntry> Entries = new List<ManEntry>();
         public string ModeLabel
@@ -346,7 +346,7 @@ namespace Dlss5Launcher
             var sb = new StringBuilder();
             sb.AppendLine("#DLSS5-Launcher manifest v1 — ne pas modifier à la main");
             sb.AppendLine("MODE\t" + Mode); sb.AppendLine("PROXY\t" + Proxy); sb.AppendLine("DATE\t" + Date);
-            sb.AppendLine("EXE\t" + Exe); sb.AppendLine("GPU\t" + GpuMode); sb.AppendLine("COMPLETE\t" + (Complete ? "1" : "0"));
+            sb.AppendLine("EXE\t" + Exe); sb.AppendLine("GPU\t" + GpuMode); sb.AppendLine("CARTE\t" + Card); sb.AppendLine("COMPLETE\t" + (Complete ? "1" : "0"));
             foreach (var e in Entries) sb.AppendLine("E\t" + e.Kind + "\t" + e.Rel + "\t" + e.Sha + "\t" + e.OrigSha);
             string tmp = FileOf(exeDir) + ".tmp";
             File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(false));
@@ -370,6 +370,7 @@ namespace Dlss5Launcher
                     case "DATE": m.Date = p[1]; break;
                     case "EXE": m.Exe = p[1]; break;
                     case "GPU": m.GpuMode = p[1]; break;
+                    case "CARTE": m.Card = p[1]; break;
                     case "COMPLETE": m.Complete = p[1] == "1"; break;
                     case "E": m.Entries.Add(new ManEntry { Kind = p[1], Rel = p.Length > 2 ? p[2] : "", Sha = p.Length > 3 ? p[3] : "", OrigSha = p.Length > 4 ? p[4] : "" }); break;
                 }
@@ -565,7 +566,7 @@ namespace Dlss5Launcher
             File.WriteAllText(probe, "ok"); File.Delete(probe);
 
             string modeId = mode == InstallMode.OptiScaler ? "OPTISCALER" : mode == InstallMode.RenoDX ? "RENODX" : mode == InstallMode.Feeder ? "FEEDER" : "FEEDER_RESHADE";
-            m = new Manifest { GpuMode = (Gpu.IsAmdMode ? Gpu.Vendor + " (port vendor-neutral)" : "NVIDIA" + (Gpu.Series > 0 ? " RTX " + Gpu.Series : "") + " (NGX)") + ", NR " + Gpu.NrLabel, Mode = modeId, Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Exe = g.ExeName };
+            m = new Manifest { GpuMode = (Gpu.IsAmdMode ? Gpu.Vendor + " (port vendor-neutral)" : "NVIDIA" + (Gpu.Series > 0 ? " RTX " + Gpu.Series : "") + " (NGX)") + ", NR " + Gpu.NrLabel, Card = Gpu.Name ?? "", Mode = modeId, Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Exe = g.ExeName };
             m.Save(exeDir);
             Log.W("Installation " + m.ModeLabel + " dans " + exeDir + "  [API " + g.ApiText + (g.Engine != null ? ", " + g.Engine : "") + ", upscalers : " + g.UpscalerText + (wanted == InstallMode.Auto ? ", choix auto" : ", choix manuel") + "]");
 
@@ -669,6 +670,7 @@ namespace Dlss5Launcher
                 try { Directory.CreateDirectory(dest); File.Copy(f, Path.Combine(dest, "moteur_" + (ei++ == 0 ? "" : ei + "_") + Path.GetFileName(f)), true); any = true; } catch { }
             // le manifeste aussi : une fiche faite APRÈS le reset saura quelle méthode / quel GPU étaient en place
             try { if (File.Exists(Manifest.FileOf(exeDir))) { Directory.CreateDirectory(dest); File.Copy(Manifest.FileOf(exeDir), Path.Combine(dest, "manifest.tsv"), true); } } catch { }
+            if (any) History.RecordArchive(g.Name, dest);   // la partie entre dans l'historique
             return any ? dest : null;
         }
 
@@ -782,6 +784,7 @@ namespace Dlss5Launcher
     {
         public int Samples;
         public double AvgMs, MinMs, MaxMs;
+        public List<double> Values = new List<double>();   // toutes les mesures, dans l'ordre du log
         public string ModelInput, Preset, When;
         public bool FrameGenSeen;
         public string Summary()
@@ -831,7 +834,7 @@ namespace Dlss5Launcher
             }
             catch { }
             if (vals.Count == 0) return r;
-            r.Samples = vals.Count; r.AvgMs = vals.Average(); r.MinMs = vals.Min(); r.MaxMs = vals.Max();
+            r.Values = vals; r.Samples = vals.Count; r.AvgMs = vals.Average(); r.MinMs = vals.Min(); r.MaxMs = vals.Max();
             r.When = File.GetLastWriteTime(p).ToString("yyyy-MM-dd HH:mm");
             return r;
         }
@@ -1007,6 +1010,28 @@ namespace Dlss5Launcher
                 if (File.Exists(p)) { string h = Hash.Sha(p); sb.AppendLine("- `" + f + "` : " + h + Who(h)); }
             }
             sb.AppendLine();
+
+            try
+            {
+                if (archive == null && g.Installed != null) History.RecordLive(g);
+                var hist = History.For(g);
+                if (hist.Count > 0)
+                {
+                    sb.AppendLine("## Historique de ce jeu (" + hist.Count + " partie" + (hist.Count > 1 ? "s" : "") + ", " + History.Hours(hist.Sum(x => x.Minutes)) + ")");
+                    sb.AppendLine();
+                    sb.AppendLine("Par montage :");
+                    sb.AppendLine();
+                    foreach (var l in History.Compare(hist)) sb.AppendLine("- " + l);
+                    sb.AppendLine();
+                    sb.AppendLine("Dernières parties :");
+                    sb.AppendLine();
+                    sb.AppendLine("```");
+                    foreach (var x in hist.Skip(Math.Max(0, hist.Count - 8))) sb.AppendLine(History.Line(x));
+                    sb.AppendLine("```");
+                    sb.AppendLine();
+                }
+            }
+            catch (Exception ex) { sb.AppendLine("(historique illisible : " + ex.Message + ")"); sb.AppendLine(); }
 
             sb.AppendLine("## Payload du launcher (docteur payload)");
             sb.AppendLine();

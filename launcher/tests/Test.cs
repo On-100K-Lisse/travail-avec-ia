@@ -403,6 +403,48 @@ class T {
       Ok(cfg.Contains("bloquerAntiCheat=1") && !cfg.Contains("presetName="),"copie pour un ami : anti-cheat bloqué d'office (et 1er démarrage gardé pour le préréglage AMD)");
       Ok(FriendCopy.Verify(fc).Count==PayloadDoctor.Check(AppPaths.Payload,true).Count && File.ReadAllText(Path.Combine(fc,"POUR-TON-AMI.txt")).Contains("Bloquer l'installation"),"copie pour un ami : vérifiée par le docteur, texte à jour");
     }
+    // ===== HISTORIQUE =====
+    Console.WriteLine("-- historique --");
+    {
+      string hr=Path.Combine(work,"jeu-hist"); var gh=Make(hr,exe); gh.Name="Jeu Histo "+Guid.NewGuid().ToString("N").Substring(0,6);
+      new Installer(gh).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(gh);
+      Func<string,int,int,double,double,string,string> L=(start,minutes,n,ca,cb,extra)=>{
+        var sb=new System.Text.StringBuilder(); var t0=TimeSpan.Parse(start);
+        sb.Append("["+t0.ToString(@"hh\:mm\:ss")+".1] [W] OptiScaler v0.1.32-final loaded\n");
+        sb.Append("["+t0.ToString(@"hh\:mm\:ss")+".2] [I] DlssNr model input 1552x864 (preset 1) model feature created\n");
+        for(int i=0;i<n;i++){ var t=t0+TimeSpan.FromSeconds(minutes*60.0*(i+1)/(n+1)); if(t.TotalDays>=1) t-=TimeSpan.FromDays(1);
+          sb.Append("["+t.ToString(@"hh\:mm\:ss")+".5] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: "+(ca+(cb-ca)*i/(double)Math.Max(1,n-1)).ToString("0.00",System.Globalization.CultureInfo.InvariantCulture)+" ms total\n"); }
+        var te=t0+TimeSpan.FromMinutes(minutes); if(te.TotalDays>=1) te-=TimeSpan.FromDays(1);
+        sb.Append(extra.Replace("{T}","["+te.ToString(@"hh\:mm\:ss")+".9]"));
+        sb.Append("["+te.ToString(@"hh\:mm\:ss")+".9] [O] Log flush 1\n"); return sb.ToString(); };
+      string logp=Path.Combine(gh.ExeDir,"OptiScaler.log");
+      File.WriteAllText(logp,L("20:00:00",156,40,5.0,7.0,"{T} [I] x model feature created\n{T} [C] Unhandled exception 8000 at 7FF, writing x\n"));
+      var s1=History.RecordLive(gh);
+      Ok(s1!=null && Math.Abs(s1.Minutes-156)<0.1 && s1.Samples==40 && s1.PresetText=="A" && s1.Model=="1552x864","historique : durée (2 h 36), mesures, preset et modèle lus dans le log");
+      Ok(s1.Crash=="exception 0x8000 (Unreal)" && s1.Creations==2 && s1.Method=="OptiScaler F5" && s1.Dll.StartsWith("version inconnue"),"historique : crash, créations du modèle, méthode et DLL notés ("+s1.Crash+", "+s1.Dll+")");
+      Ok(Math.Abs(s1.Avg-6.0)<0.01 && s1.First<s1.Last && s1.Drift>0.2 && History.Line(s1).Contains("en fin de partie"),"historique : coût moyen, et hausse du coût en fin de partie repérée");
+      History.RecordLive(gh); Ok(History.For(gh).Count==1,"historique : la même partie notée deux fois ne fait qu'une ligne");
+      new Installer(gh).Reset(); Scanner.Analyze(gh);
+      var hh=History.For(gh);
+      Ok(hh.Count==1 && hh[0].Source.StartsWith("journal ") && hh[0].Samples==40,"historique : après le reset, la partie vient du journal archivé (pas de doublon)");
+      // deuxième partie, en Preset B, qui passe minuit
+      new Installer(gh).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(gh);
+      File.WriteAllText(logp,L("23:50:00",30,20,3.0,3.0,"").Replace("(preset 1)","(preset 2)"));
+      var hs2=History.RecordLive(gh);
+      Ok(hs2!=null && Math.Abs(hs2.Minutes-30)<0.1 && hs2.PresetText=="B" && !hs2.Crashed,"historique : partie qui passe minuit = 30 min, Preset B, sans crash");
+      var cmp=History.Compare(History.For(gh));
+      Ok(cmp.Count==2 && cmp.Any(x=>x.Contains("Preset A") && x.Contains("1 crash")) && cmp.Any(x=>x.Contains("Preset B") && x.Contains("aucun crash")),"historique : comparaison Preset A / Preset B");
+      var raw=File.ReadAllBytes(History.FilePath); var txt=File.ReadAllText(History.FilePath);
+      Ok(raw[0]==0xEF && txt.Contains("NR moyen (ms)") && txt.Contains(";6,0;") && txt.Contains("Début;Fin;Durée"),"historique.csv : lisible dans Excel (BOM, « ; », virgule décimale)");
+      var fh=File.ReadAllText(Report.Write(gh,"RTX"));
+      Ok(fh.Contains("## Historique de ce jeu (2 parties") && fh.Contains("Preset B"),"fiche : section historique du jeu");
+      // reprise des journaux au démarrage : on efface l'historique, il se reconstruit depuis journaux\
+      var keepCsv=File.ReadAllText(History.FilePath); File.Delete(History.FilePath);
+      int nb=History.Backfill(new[]{gh});
+      var rb=History.For(gh);
+      Ok(nb>=2 && rb.Count==2 && rb.Any(x=>x.Source.StartsWith("journal")) && rb.Any(x=>x.Source=="dossier du jeu"),"historique : reconstruit depuis les journaux archivés + la partie en cours ("+nb+")");
+      int nb2=History.Backfill(new[]{gh}); Ok(History.For(gh).Count==2,"historique : relancer la reprise ne crée pas de doublon");
+    }
     // 5. 32-bit refusé
     Console.WriteLine(fails==0?"\nTOUS LES TESTS PASSENT":"\n"+fails+" ÉCHEC(S)");
   }
