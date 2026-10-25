@@ -170,7 +170,8 @@ qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le
 
 Le launcher garde une ligne par partie dans `historique.csv`, à côté de l'exe. Le fichier s'ouvre
 dans Excel : séparateur `;`, virgule décimale, encodage UTF-8 avec BOM pour les accents. Il reste
-sur le PC de l'utilisateur et n'est jamais copié dans une copie pour un ami.
+sur le PC de l'utilisateur et n'est jamais copié dans une copie pour un ami (pas plus que
+`etapes.tsv`).
 
 - **Ce qui est noté pour chaque partie :**
   - début, fin, durée (lus dans les heures des lignes d'`OptiScaler.log`, y compris une partie qui
@@ -195,8 +196,39 @@ sur le PC de l'utilisateur et n'est jamais copié dans une copie pour un ami.
     y sont « inconnue » ;
   - le premier quart des mesures peut contenir des menus, qui coûtent moins cher : une hausse en fin
     de partie n'est pas forcément une dérive ;
-  - RenoDX et le Feeder ReShade ne sont pas encore notés : le launcher ne lit pas le coût NR dans
-    leurs logs.
+  - RenoDX et le Feeder ReShade ne sont pas notés automatiquement, parce que le launcher ne lit pas
+    le coût NR dans leurs logs. On peut les noter à la main (voir ci-dessous).
+
+### Le protocole de test A/B
+
+C'est la méthode d'On-100-K-Lisse : changer **une seule chose à la fois**, puis comparer. Par
+exemple, pour Cyberpunk 2077 : 1) le jeu sans aucun mod, 2) avec DLSS 5 seulement, 3) avec DLSS 5
+et les autres mods. Le launcher range les parties par étape et compare les étapes. Il n'installe
+pas l'étape lui-même : on installe et on réinitialise comme d'habitude.
+
+- **Étape de test** (onglet Jeu) : une suggestion (« 1 - Vanille (aucun mod) », « 2 - DLSS 5
+  seul », « 3 - DLSS 5 + mods », « Preset A », « Preset B ») ou un nom libre. Chaque choix est
+  noté avec son heure dans `etapes.tsv`. Une partie prend l'étape qui était active à sa fin : on peut
+  donc changer d'étape entre deux parties sans mélanger les résultats.
+- **Partie à la main** : pour ce que le launcher ne peut pas lire. L'étape « vanille » n'a pas
+  d'OptiScaler, donc pas de log ; RenoDX et le Feeder ReShade non plus. On entre le début, la durée,
+  le crash éventuel (crash du jeu, gel ou écran noir, crash GPU, autre) et une note.
+- **Comparaison par étape** (fenêtre Historique et fiche de test) : pour chaque étape, nombre de
+  parties, temps de jeu, crashs, temps moyen entre deux crashs, coût NR et méthodes utilisées.
+- **Verdict.** Le launcher cherche la première étape qui plante alors qu'aucune étape d'avant n'a
+  planté, et ne conclut que si les étapes d'avant ont assez de temps de jeu :
+
+  | Temps de jeu sans crash aux étapes d'avant | Ce que dit le launcher |
+  |---|---|
+  | Au moins 3 fois le temps moyen entre deux crashs de l'étape qui plante | « probablement ce qu'ajoute cette étape qui fait planter (à confirmer en rejouant) » |
+  | Entre 1 et 3 fois | « un indice, pas encore une preuve », avec le temps de jeu qu'il faudrait |
+  | Moins d'une fois | « trop peu pour conclure », avec le temps de jeu qu'il faudrait |
+  | Ça plante dès la première étape | le problème est déjà là sans ce qu'ajoutent les étapes suivantes |
+
+  Pourquoi 3 fois : si une étape plante en moyenne toutes les heures, jouer une heure sans crash
+  arrive encore environ une fois sur trois par simple hasard. Jouer trois heures sans crash
+  n'arrive plus qu'environ une fois sur vingt (en supposant que les crashs arrivent au hasard, à un
+  rythme constant).
 
 ### Cartes graphiques
 
@@ -268,8 +300,8 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 | `Install.cs` | Réglages et préréglages, génération des INI, manifeste, installation, réinitialisation, garde-fous de stabilité, mesure du coût NR, diagnostic, fiche de test, copie pour un ami |
 | `Cleaner.cs` | Réinitialisation universelle : manifeste du 1-Click, reconnaissance des restes de mods, quarantaine et annulation |
 | `Doctor.cs` | Docteur payload : hashs des fichiers connus, vérification du `payload\`, détection d'une DLL coupée, rapport |
-| `History.cs` | Historique des parties : lecture d'une partie dans `OptiScaler.log`, `historique.csv`, reprise des journaux archivés, comparaison des montages |
-| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, fenêtre d'historique, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
+| `History.cs` | Historique des parties : lecture d'une partie dans `OptiScaler.log`, `historique.csv`, reprise des journaux archivés, comparaison des montages ; étapes de test (`etapes.tsv`), parties notées à la main, comparaison des étapes et verdict |
+| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, fenêtre d'historique, étape de test, partie à la main, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
 | `COMPILER.bat` | Recompile l'exe avec le compilateur C# inclus dans Windows (`csc.exe` de .NET Framework 4) |
 
 ### Compiler
@@ -288,12 +320,13 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 ### Tests
 
-[`tests/Test.cs`](tests/Test.cs) contient **141 vérifications automatiques**. Elles tournent sur de
+[`tests/Test.cs`](tests/Test.cs) contient **153 vérifications automatiques**. Elles tournent sur de
 faux jeux, avec un faux payload : installation, réglages, réinitialisation identique au hash près,
 nettoyage d'un 1-Click et d'une installation manuelle, détection Unity / Unreal, mode AMD, RTX 50,
 diagnostic de crash, fiche de test faite après un reset, docteur payload (fichier coupé, vide,
 inconnu, autre version, mélange de versions), copie pour un ami et historique (durée, partie qui
-passe minuit, crash, doublons, comparaison Preset A / B, reprise des journaux). Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+passe minuit, crash, doublons, comparaison Preset A / B, reprise des journaux) et protocole de test
+(étape active au bon moment, les quatre verdicts, ancien `historique.csv` toujours lisible). Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
 mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs src/History.cs   # + les -r: ci-dessus

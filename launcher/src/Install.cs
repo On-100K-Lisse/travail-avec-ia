@@ -991,6 +991,8 @@ namespace Dlss5Launcher
             else sb.AppendLine("- Mode : (rien d'installé par le launcher)");
             if (archive != null) sb.AppendLine("- **Source : journal archivé le " + Path.GetFileName(archive).Replace("_avant-reset", "").Replace("_", " à ") + "**, juste avant la réinitialisation (`" + archive + "`)");
             if (g.Note != null) sb.AppendLine("- Note connue : " + g.Note);
+            string stepNow = Steps.Current(g.Name);
+            if (stepNow != "") sb.AppendLine("- **Étape de test : « " + stepNow + " »**");
             sb.AppendLine();
 
             sb.AppendLine("## Fichiers installés (SHA-256)");
@@ -1019,6 +1021,14 @@ namespace Dlss5Launcher
                 {
                     sb.AppendLine("## Historique de ce jeu (" + hist.Count + " partie" + (hist.Count > 1 ? "s" : "") + ", " + History.Hours(hist.Sum(x => x.Minutes)) + ")");
                     sb.AppendLine();
+                    var cs = History.CompareSteps(hist);
+                    if (cs.Count > 0)
+                    {
+                        sb.AppendLine("Par étape de test (protocole A/B) :");
+                        sb.AppendLine();
+                        foreach (var l in cs) sb.AppendLine("- " + l);
+                        sb.AppendLine();
+                    }
                     sb.AppendLine("Par montage :");
                     sb.AppendLine();
                     foreach (var l in History.Compare(hist)) sb.AppendLine("- " + l);

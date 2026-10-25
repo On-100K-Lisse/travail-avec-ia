@@ -12,7 +12,7 @@ namespace Dlss5Launcher
 {
     public class Session
     {
-        public string Key, Game, Card, Method, Dll, Preset, Model, Crash, Source;
+        public string Key, Game, Card, Method, Dll, Preset, Model, Crash, Source, Step = "", Note = "";
         public DateTime Start, End;
         public double Minutes, Avg, Min, Max, P95, First, Last;
         public int Samples, Creations;
@@ -31,7 +31,7 @@ namespace Dlss5Launcher
         public static string FilePath { get { return Path.Combine(AppPaths.Root, "historique.csv"); } }
 
         static readonly string[] Cols = { "Début", "Fin", "Durée (min)", "Jeu", "Carte", "Méthode", "DLL NR", "Preset", "Modèle",
-            "NR moyen (ms)", "NR min", "NR max", "NR p95", "NR début de partie", "NR fin de partie", "Mesures", "Créations du modèle", "Crash", "Source", "Clé" };
+            "NR moyen (ms)", "NR min", "NR max", "NR p95", "NR début de partie", "NR fin de partie", "Mesures", "Créations du modèle", "Crash", "Étape", "Note", "Source", "Clé" };
 
         // ------------------------------------------------------------ lecture d'un log
         // dir : dossier de l'exe (session en cours ou dernière partie) ou journal archivé. m : manifeste (peut être null).
@@ -62,6 +62,7 @@ namespace Dlss5Launcher
             }
             s.Creations = Regex.Matches(text, @"model feature created").Count;
             s.Crash = CrashType(text);
+            s.Step = Steps.At(gameName, s.End);
             s.Method = m != null ? m.ModeLabel : "inconnue";
             s.Card = m != null && !string.IsNullOrEmpty(m.Card) ? m.Card : m != null && !string.IsNullOrEmpty(m.GpuMode) ? m.GpuMode : "inconnue";
             var e = m == null ? null : m.Entries.FirstOrDefault(x => x.Rel.Equals("nvngx_dlssnr.dll", StringComparison.OrdinalIgnoreCase) && x.Kind != "MOVED");
@@ -103,7 +104,7 @@ namespace Dlss5Launcher
                         Method = col(p, "Méthode"), Dll = col(p, "DLL NR"), Preset = col(p, "Preset") == "A" ? "1" : col(p, "Preset") == "B" ? "2" : col(p, "Preset"),
                         Model = col(p, "Modèle"), Avg = Num(col(p, "NR moyen (ms)")), Min = Num(col(p, "NR min")), Max = Num(col(p, "NR max")), P95 = Num(col(p, "NR p95")),
                         First = Num(col(p, "NR début de partie")), Last = Num(col(p, "NR fin de partie")), Samples = (int)Num(col(p, "Mesures")),
-                        Creations = (int)Num(col(p, "Créations du modèle")), Crash = col(p, "Crash"), Source = col(p, "Source"), Key = col(p, "Clé")
+                        Creations = (int)Num(col(p, "Créations du modèle")), Crash = col(p, "Crash"), Step = col(p, "Étape"), Note = col(p, "Note"), Source = col(p, "Source"), Key = col(p, "Clé")
                     };
                     if (!string.IsNullOrEmpty(s.Key)) r.Add(s);
                 }
@@ -118,7 +119,7 @@ namespace Dlss5Launcher
             foreach (var s in all.OrderBy(x => x.Start))
                 sb.AppendLine(string.Join(";", new[] {
                     s.Start.ToString("yyyy-MM-dd HH:mm"), s.End.ToString("yyyy-MM-dd HH:mm"), N(s.Minutes, "0"), s.Game, s.Card, s.Method, s.Dll, s.PresetText, s.Model ?? "",
-                    N(s.Avg), N(s.Min), N(s.Max), N(s.P95), N(s.First), N(s.Last), s.Samples.ToString(), s.Creations.ToString(), s.Crash, s.Source, s.Key }.Select(Clean)));
+                    N(s.Avg), N(s.Min), N(s.Max), N(s.P95), N(s.First), N(s.Last), s.Samples.ToString(), s.Creations.ToString(), s.Crash, s.Step, s.Note, s.Source, s.Key }.Select(Clean)));
             string tmp = FilePath + ".tmp";
             File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(true));   // BOM : Excel l'ouvre avec les accents
             if (File.Exists(FilePath)) File.Delete(FilePath);
@@ -137,6 +138,7 @@ namespace Dlss5Launcher
                 {
                     // une partie déjà notée depuis le dossier du jeu garde ses infos ; le journal archivé devient la source
                     if (s.Samples < old.Samples && old.Source.StartsWith("journal")) return old;
+                    if (string.IsNullOrEmpty(s.Note)) s.Note = old.Note;
                     all.Remove(old);
                 }
                 all.Add(s);
@@ -205,11 +207,63 @@ namespace Dlss5Launcher
             return r;
         }
 
+        // Protocole A/B : une ligne par étape, dans l'ordre des étapes, puis un verdict prudent.
+        public static List<string> CompareSteps(List<Session> ss)
+        {
+            var r = new List<string>();
+            var steps = ss.Where(x => !string.IsNullOrEmpty(x.Step)).GroupBy(x => x.Step).OrderBy(x => x.Key, StringComparer.CurrentCultureIgnoreCase).ToList();
+            if (steps.Count == 0) return r;
+            foreach (var st in steps)
+            {
+                var l = st.ToList(); double minutes = l.Sum(x => x.Minutes); int crashes = l.Count(x => x.Crashed);
+                int meas = l.Sum(x => x.Samples);
+                var methods = l.Select(x => x.Samples > 0 ? x.Method + " · Preset " + x.PresetText : x.Method).Distinct().ToList();
+                r.Add("« " + st.Key + " » : " + l.Count + " partie" + (l.Count > 1 ? "s" : "") + ", " + Hours(minutes) +
+                      (meas > 0 ? ", NR ≈ " + N(l.Sum(x => x.Avg * x.Samples) / meas) + " ms" : "") +
+                      (crashes > 0 ? ", " + crashes + " crash" + (crashes > 1 ? "s" : "") + " (un toutes les " + Hours(minutes / crashes) + ")" : ", aucun crash") +
+                      "  —  " + string.Join(" / ", methods));
+            }
+            // verdict : la première étape qui plante, alors que toutes celles d'avant n'ont jamais planté
+            for (int i = 0; i < steps.Count; i++)
+            {
+                var l = steps[i].ToList(); int c = l.Count(x => x.Crashed);
+                if (c == 0) continue;
+                if (i == 0) { r.Add("→ Ça plante dès la première étape (« " + steps[0].Key + " ») : le problème est déjà là sans ce qu'ajoutent les étapes suivantes."); break; }
+                var before = steps.Take(i).SelectMany(x => x).ToList();
+                if (before.Any(x => x.Crashed)) break;
+                double per = l.Sum(x => x.Minutes) / c, prev = before.Sum(x => x.Minutes);
+                string first = "→ Premier crash à l'étape « " + steps[i].Key + " ». Les étapes d'avant n'ont aucun crash en " + Hours(prev) + " de jeu.";
+                // sans crash pendant 3 fois le temps moyen avant un crash : le hasard n'explique plus vraiment (≈ 5 % de chances)
+                if (prev >= 3 * per) r.Add(first + " C'est donc probablement ce qu'ajoute cette étape qui fait planter (à confirmer en rejouant).");
+                else if (prev >= per) r.Add(first + " C'est un indice, pas encore une preuve : à cette étape, ça plante environ toutes les " + Hours(per) +
+                                            " ; pour conclure, il faudrait environ " + Hours(3 * per) + " de jeu sans crash aux étapes d'avant.");
+                else r.Add(first + " Mais c'est trop peu pour conclure : à cette étape, ça plante environ toutes les " + Hours(per) +
+                           " ; il faudrait environ " + Hours(3 * per) + " de jeu sans crash aux étapes d'avant.");
+                break;
+            }
+            if (!steps.Any(x => x.Any(y => y.Crashed))) r.Add("→ Aucun crash à aucune étape pour l'instant (" + Hours(ss.Where(x => !string.IsNullOrEmpty(x.Step)).Sum(x => x.Minutes)) + " de jeu).");
+            return r;
+        }
+
+        // Partie notée à la main (ex. étape « vanille », sans OptiScaler : aucun log à lire).
+        public static Session RecordManual(string gameName, DateTime start, double minutes, string crash, string step, string note)
+        {
+            var s = new Session
+            {
+                Game = gameName, Start = start, End = start.AddMinutes(minutes), Minutes = minutes, Method = "sans DLSS 5", Dll = "aucune", Card = Gpu.Name ?? "inconnue",
+                Preset = "", Model = "", Crash = string.IsNullOrEmpty(crash) ? NoCrash : crash, Step = step ?? "", Note = note ?? "", Source = "noté à la main"
+            };
+            s.Key = Installer.Safe(gameName) + "|" + start.ToString("yyyy-MM-dd HH:mm:ss");
+            return Record(s);
+        }
+
         public static string Line(Session s)
         {
             return s.Start.ToString("yyyy-MM-dd HH:mm") + "  " + Hours(s.Minutes).PadLeft(7) + "  " + (s.Samples > 0 ? ("NR " + N(s.Avg) + " ms").PadRight(12) : "pas de mesure").PadRight(12) +
-                   "  Preset " + s.PresetText + (string.IsNullOrEmpty(s.Model) ? "" : " " + s.Model) + "  " + s.Method + (s.Crashed ? "  ← " + s.Crash : "") +
-                   (s.Samples >= 8 && s.Drift >= 0.2 ? "  (NR +" + (s.Drift * 100).ToString("0", Fr) + " % en fin de partie)" : "");
+                   (string.IsNullOrEmpty(s.Step) ? "" : "  [" + s.Step + "]") +
+                   (s.Samples > 0 ? "  Preset " + s.PresetText + (string.IsNullOrEmpty(s.Model) ? "" : " " + s.Model) : "") + "  " + s.Method + (s.Crashed ? "  ← " + s.Crash : "") +
+                   (s.Samples >= 8 && s.Drift >= 0.2 ? "  (NR +" + (s.Drift * 100).ToString("0", Fr) + " % en fin de partie)" : "") +
+                   (string.IsNullOrEmpty(s.Note) ? "" : "  — " + s.Note);
         }
 
         public static string DllShort(string dll)
@@ -231,5 +285,50 @@ namespace Dlss5Launcher
         static double Num(string s) { double v; return double.TryParse(s, NumberStyles.Float, Fr, out v) ? v : 0; }
         static DateTime Dt(string s) { DateTime d; return DateTime.TryParseExact(s, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out d) ? d : DateTime.MinValue; }
         static string Clean(string s) { return (s ?? "").Replace(";", ",").Replace("\r", " ").Replace("\n", " "); }
+    }
+
+    // Étapes de test (protocole A/B) : l'étape choisie pour un jeu, avec l'heure du choix (etapes.tsv).
+    // Une partie prend l'étape qui était active à sa fin.
+    public static class Steps
+    {
+        public static readonly string[] Suggestions = { "1 - Vanille (aucun mod)", "2 - DLSS 5 seul", "3 - DLSS 5 + mods", "Preset A", "Preset B" };
+        static readonly object Lk = new object();
+        public static string FilePath { get { return Path.Combine(AppPaths.Root, "etapes.tsv"); } }
+
+        static List<string[]> All()
+        {
+            var r = new List<string[]>();
+            lock (Lk)
+            {
+                if (!File.Exists(FilePath)) return r;
+                try { foreach (var l in File.ReadAllLines(FilePath, Encoding.UTF8)) { var p = l.Split('\t'); if (p.Length >= 3 && !l.StartsWith("#")) r.Add(p); } } catch { }
+            }
+            return r;
+        }
+
+        public static string At(string gameName, DateTime t)
+        {
+            string k = Installer.Safe(gameName);
+            string cur = "";
+            foreach (var p in All())
+            {
+                DateTime d;
+                if (p[0] == k && DateTime.TryParseExact(p[1], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out d) && d <= t) cur = p[2];
+            }
+            return cur;
+        }
+        public static string Current(string gameName) { return At(gameName, DateTime.Now.AddSeconds(1)); }
+
+        public static void Set(string gameName, string step)
+        {
+            step = (step ?? "").Replace("\t", " ").Replace(";", ",").Trim();
+            if (step == Current(gameName)) return;
+            lock (Lk)
+            {
+                if (!File.Exists(FilePath)) File.WriteAllText(FilePath, "# jeu<TAB>depuis<TAB>étape — écrit par le launcher\r\n", new UTF8Encoding(true));
+                File.AppendAllText(FilePath, Installer.Safe(gameName) + "\t" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\t" + step + "\r\n", new UTF8Encoding(false));
+            }
+            Log.W("Étape de test de " + gameName + " : " + (step == "" ? "(aucune)" : step));
+        }
     }
 }

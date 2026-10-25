@@ -158,3 +158,19 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
 - **Vérifié :** 141 vérifications automatiques, lancées trois fois de suite. Essai de la reprise sur
   les vrais journaux d'On-100-K-Lisse (8 parties retrouvées), puis essai sous Windows par
   On-100-K-Lisse le 25 octobre : ça fonctionne.
+
+## 13. Protocole de test A/B — 25 oct.
+
+- **Origine :** idée proposée par Kai, en version allégée choisie avec On-100-K-Lisse : le
+  launcher range et compare les étapes, mais n'installe pas les étapes à la place de l'utilisateur.
+- **Ajouts :**
+  - case **Étape de test** dans l'onglet Jeu, avec des suggestions ; le choix est noté avec son
+    heure dans `etapes.tsv`, et une partie prend l'étape active à sa fin ;
+  - bouton **Partie à la main** pour l'étape vanille, RenoDX et le Feeder ReShade (début, durée,
+    crash, note) ;
+  - colonnes **Étape** et **Note** dans `historique.csv` (un ancien fichier reste lisible) ;
+  - comparaison par étape et **verdict prudent** dans la fenêtre Historique et la fiche de test :
+    une étape n'est désignée que si les étapes d'avant ont joué au moins 3 fois son temps moyen
+    entre deux crashs sans planter ; sinon « indice » ou « trop peu pour conclure ».
+- **Vérifié :** 153 vérifications automatiques, lancées deux fois de suite, puis essai sous Windows
+  par On-100-K-Lisse le 25 octobre : ça fonctionne.

@@ -445,6 +445,52 @@ class T {
       Ok(nb>=2 && rb.Count==2 && rb.Any(x=>x.Source.StartsWith("journal")) && rb.Any(x=>x.Source=="dossier du jeu"),"historique : reconstruit depuis les journaux archivés + la partie en cours ("+nb+")");
       int nb2=History.Backfill(new[]{gh}); Ok(History.For(gh).Count==2,"historique : relancer la reprise ne crée pas de doublon");
     }
+    // ===== PROTOCOLE DE TEST (étapes) =====
+    Console.WriteLine("-- protocole de test --");
+    {
+      string gn="Jeu Etapes "+Guid.NewGuid().ToString("N").Substring(0,6);
+      Ok(Steps.Current(gn)=="","étape : aucune au départ");
+      Steps.Set(gn,"1 - Vanille (aucun mod)"); var t1=DateTime.Now; System.Threading.Thread.Sleep(1100);
+      Steps.Set(gn,"2 - DLSS 5 seul");
+      Ok(Steps.At(gn,t1)=="1 - Vanille (aucun mod)" && Steps.Current(gn)=="2 - DLSS 5 seul","étape : chaque partie prend l'étape active à sa fin (historique des choix)");
+      var now=DateTime.Now;
+      History.RecordManual(gn,now.AddHours(-6),40,History.NoCrash,"1 - Vanille (aucun mod)","jeu sans DLSS 5");
+      History.RecordManual(gn,now.AddHours(-5),60,History.NoCrash,"2 - DLSS 5 seul","");
+      History.RecordManual(gn,now.AddHours(-4),60,History.NoCrash,"2 - DLSS 5 seul","");
+      History.RecordManual(gn,now.AddHours(-3),30,"crash du jeu (retour au bureau)","3 - DLSS 5 + mods","modpack ajouté");
+      var gs=History.Load().Where(x=>x.Game==gn).ToList();
+      var cs=History.CompareSteps(gs);
+      Ok(gs.Count==4 && cs.Count==4 && cs[0].Contains("1 - Vanille") && cs[1].Contains("2 parties") && cs[2].Contains("1 crash"),"protocole : une ligne par étape, dans l'ordre");
+      Ok(cs[3].Contains("Premier crash à l'étape « 3 - DLSS 5 + mods »") && cs[3].Contains("probablement"),"protocole : verdict quand les étapes d'avant ont assez de jeu ("+cs[3]+")");
+      string gn2="Jeu Etapes2 "+Guid.NewGuid().ToString("N").Substring(0,6);
+      History.RecordManual(gn2,now.AddHours(-6),20,History.NoCrash,"1 - Vanille (aucun mod)","");
+      History.RecordManual(gn2,now.AddHours(-5),120,"crash du jeu (retour au bureau)","2 - DLSS 5 seul","");
+      var c2=History.CompareSteps(History.Load().Where(x=>x.Game==gn2).ToList());
+      Ok(c2.Last().Contains("trop peu pour conclure") && c2.Last().Contains("6 h 00"),"protocole : pas de faux verdict quand l'étape sans crash a trop peu de jeu");
+      string gn4="Jeu Etapes4 "+Guid.NewGuid().ToString("N").Substring(0,6);
+      History.RecordManual(gn4,now.AddHours(-6),90,History.NoCrash,"1 - Vanille (aucun mod)","");
+      History.RecordManual(gn4,now.AddHours(-4),60,"crash du jeu (retour au bureau)","2 - DLSS 5 seul","");
+      Ok(History.CompareSteps(History.Load().Where(x=>x.Game==gn4).ToList()).Last().Contains("un indice, pas encore une preuve"),"protocole : entre les deux, « indice » seulement");
+      string gn3="Jeu Etapes3 "+Guid.NewGuid().ToString("N").Substring(0,6);
+      History.RecordManual(gn3,now.AddHours(-6),20,"gel / écran noir","1 - Vanille (aucun mod)","");
+      Ok(History.CompareSteps(History.Load().Where(x=>x.Game==gn3).ToList()).Last().Contains("dès la première étape"),"protocole : crash dès la vanille → le problème n'est pas DLSS 5");
+      Ok(History.Line(gs.First(x=>x.Step.StartsWith("3"))).Contains("[3 - DLSS 5 + mods]") && History.Line(gs[0]).Contains("— jeu sans DLSS 5") && !History.Line(gs[0]).Contains("Preset"),"protocole : la ligne d'une partie montre l'étape et la note");
+      // partie lue dans le log : prend l'étape active
+      string sr=Path.Combine(work,"jeu-etape"); var ge=Make(sr,exe); ge.Name=gn;
+      new Installer(ge).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(ge);
+      var st0=DateTime.Now.AddMinutes(-29); var en0=DateTime.Now.AddMinutes(1);
+      File.WriteAllText(Path.Combine(ge.ExeDir,"OptiScaler.log"),"["+st0.ToString("HH:mm:ss")+".1] [W] OptiScaler loaded\n["+en0.ToString("HH:mm:ss")+".1] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 4.00 ms total\n");
+      var sl=History.RecordLive(ge);
+      Ok(sl!=null && sl.Step=="2 - DLSS 5 seul","protocole : une partie lue dans OptiScaler.log est rangée sous l'étape active");
+      var fe=File.ReadAllText(Report.Write(ge,"RTX"));
+      Ok(fe.Contains("Étape de test : « 2 - DLSS 5 seul »") && fe.Contains("Par étape de test (protocole A/B)"),"fiche : étape de test et comparaison des étapes");
+      Ok(File.ReadAllText(History.FilePath).Split('\n')[0].Contains(";Étape;Note;"),"historique.csv : colonnes Étape et Note");
+      // ancien historique (sans colonnes Étape / Note) toujours lisible
+      var bak=File.ReadAllText(History.FilePath);
+      File.WriteAllText(History.FilePath,"﻿Début;Fin;Durée (min);Jeu;Carte;Méthode;DLL NR;Preset;Modèle;NR moyen (ms);NR min;NR max;NR p95;NR début de partie;NR fin de partie;Mesures;Créations du modèle;Crash;Source;Clé\n2026-10-24 20:58;2026-10-24 23:34;156;Vieux;inconnue;Feeder F5Low;inconnue;A;1552x864;6,0;5,0;7,0;6,3;5,9;6,1;854;2;exception 0x8000 (Unreal);journal x;Vieux|2026-10-24 20:58:16\n");
+      var old=History.Load(); File.WriteAllText(History.FilePath,bak);
+      Ok(old.Count==1 && old[0].Step=="" && Math.Abs(old[0].Avg-6.0)<0.01 && old[0].Crashed,"historique : un ancien fichier sans colonne Étape reste lisible");
+    }
     // 5. 32-bit refusé
     Console.WriteLine(fails==0?"\nTOUS LES TESTS PASSENT":"\n"+fails+" ÉCHEC(S)");
   }

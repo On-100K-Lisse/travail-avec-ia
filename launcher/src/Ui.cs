@@ -91,14 +91,14 @@ namespace Dlss5Launcher
         CheckBox chkAntiCheat;
         bool blockAntiCheat;                         // launcher-config.ini : bloquerAntiCheat=1 (d'office dans la copie pour un ami)
         List<PItem> payloadItems;
-        ComboBox cbMode, cbProxy, cbPreset;
+        ComboBox cbMode, cbProxy, cbPreset, cbStep;
         NrSettings defaults = new NrSettings();    // réglages par défaut (jeux sans profil)
         string defaultPresetName = Presets.Names[0], presetName = Presets.Names[0];
         Label lblProfile;
         Button bImport, bMakeDefault, bResetProfile;
         static string ProfilesDir { get { return Path.Combine(AppPaths.Root, "profils"); } }
         static string ProfilePath(Game g) { return Path.Combine(ProfilesDir, Installer.Safe(g.Name) + ".ini"); }
-        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo, bHistory;
+        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo, bHistory, bManual;
         Panel pageJeu, pageReglages, pageJournal;
         Button tabJeu, tabReglages, tabJournal;
         ProgressBar progress;
@@ -191,7 +191,7 @@ namespace Dlss5Launcher
             list.SelectedIndexChanged += (s, e) =>
             {
                 var ns = list.SelectedItems.Count > 0 ? (Game)list.SelectedItems[0].Tag : null;
-                if (ns != selected) { selected = ns; LoadProfile(selected); }
+                if (ns != selected) { CommitStep(); selected = ns; LoadProfile(selected); LoadStep(); }
                 ShowGame();
             };
             list.DoubleClick += (s, e) => { if (selected != null) OpenFolder(); };
@@ -263,6 +263,17 @@ namespace Dlss5Launcher
             opts.Controls.Add(cbMode, 1, 0);
             opts.Controls.Add(new Label { Text = "DLL proxy :", AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 6, 10, 6) }, 0, 1);
             opts.Controls.Add(cbProxy, 1, 1);
+            cbStep = new SafeCombo { DropDownStyle = ComboBoxStyle.DropDown, Width = 300, FlatStyle = FlatStyle.Flat };
+            cbStep.Items.AddRange(Steps.Suggestions);
+            Theme.Dark(cbStep);
+            tips.SetToolTip(cbStep, "Protocole de test A/B : nomme l'étape que tu testes (une variable à la fois).\n" +
+                "Chaque partie jouée ensuite est rangée sous cette étape dans l'historique,\npuis « Historique » compare les étapes entre elles.\n" +
+                "Choisis une suggestion ou écris la tienne ; vide = pas de protocole.\nUne étape sans DLSS 5 (vanille) : « Noter une partie à la main » après avoir joué.");
+            cbStep.SelectionChangeCommitted += (s, e) => { if (cbStep.SelectedItem != null) cbStep.Text = (string)cbStep.SelectedItem; CommitStep(); };
+            cbStep.Leave += (s, e) => CommitStep();
+            cbStep.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { CommitStep(); e.SuppressKeyPress = true; } };
+            opts.Controls.Add(new Label { Text = "Étape de test :", AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 6, 10, 6) }, 0, 2);
+            opts.Controls.Add(cbStep, 1, 2);
 
             var row1 = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Theme.Panel, Margin = new Padding(0) };
             bInstall = Theme.Btn("⚡  Installer DLSS 5", Theme.Green, 230, 46);
@@ -282,7 +293,9 @@ namespace Dlss5Launcher
             tips.SetToolTip(bUndo, "Remet en place les fichiers que le dernier nettoyage a mis en quarantaine\n(dossier « quarantaine » du launcher).");
             bHistory = Theme.Btn("📈  Historique", Theme.Blue, 150); bHistory.Click += (s, e) => ShowHistory(selected);
             tips.SetToolTip(bHistory, "Toutes tes parties de ce jeu : durée, coût NR, preset, DLL, crash.\nCompare les montages entre eux (ex. Preset A contre Preset B).\nFichier complet : historique.csv (s'ouvre dans Excel).");
-            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bHistory, bJournaux, bUndo });
+            bManual = Theme.Btn("✎  Partie à la main", Theme.Line, 150); bManual.Click += (s, e) => DoManualSession(selected);
+            tips.SetToolTip(bManual, "Note une partie que le launcher ne peut pas lire lui-même :\nune étape « vanille » (sans DLSS 5), ou RenoDX / Feeder ReShade.\nDurée, crash ou non, et une note.");
+            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bHistory, bManual, bJournaux, bUndo });
             tips.SetToolTip(bReport, "Crée une fiche Markdown (jeu, mode, hashes, réglages, extrait du log)\ndans le dossier fiches-de-test — pratique pour ta documentation.");
             tips.SetToolTip(bReset, "Remet le dossier du jeu exactement comme avant l'installation,\nd'après le manifeste. Les logs sont archivés avant.");
 
@@ -644,6 +657,8 @@ namespace Dlss5Launcher
             bool has = g != null;
             foreach (var b in new[] { bInstall, bReset, bLaunch, bFolder, bLog, bReport, bImport, bResetProfile, bUndo }) if (b != null) b.Enabled = has && !busy;
             if (bHistory != null) bHistory.Enabled = true;
+            if (cbStep != null) cbStep.Enabled = has;
+            if (bManual != null) bManual.Enabled = has && !busy;
             if (!has)
             {
                 lblGame.Text = "Choisis un jeu dans la liste"; lblStatus.Text = ""; lblNote.Text = "";
@@ -674,6 +689,8 @@ namespace Dlss5Launcher
                 string arch = g.Installed == null ? Report.LatestArchive(g) : null;
                 var pf = g.Installed != null ? Perf.Read(g.ExeDir) : arch != null ? Perf.Read(arch) : null;
                 if (pf != null && pf.Samples > 0) { lines.Add((arch != null ? "Dernière session (journal archivé) : " : "Dernière session : ") + pf.Summary()); lines.Add("→ " + pf.Advice()); details.Text = string.Join("\r\n", lines); }
+                string step = Steps.Current(g.Name);
+                if (step != "") { lines.Add("Étape de test : « " + step + " » — les prochaines parties y seront rangées."); details.Text = string.Join("\r\n", lines); }
                 var hist = History.For(g);
                 if (hist.Count > 0)
                 {
@@ -981,6 +998,52 @@ namespace Dlss5Launcher
             }
         }
 
+        // =============================================================== protocole de test
+        void LoadStep() { if (cbStep != null) cbStep.Text = selected == null ? "" : Steps.Current(selected.Name); }
+        void CommitStep()
+        {
+            if (cbStep == null || selected == null) return;
+            try { string before = Steps.Current(selected.Name); Steps.Set(selected.Name, cbStep.Text); if (before != Steps.Current(selected.Name)) ShowGame(); }
+            catch (Exception ex) { Log.W("Étape de test : " + ex.Message); }
+        }
+
+        void DoManualSession(Game g)
+        {
+            if (g == null) return;
+            CommitStep();
+            var f = new Form { Text = "Noter une partie à la main — " + g.Name, Width = 560, Height = 360, StartPosition = FormStartPosition.CenterParent, BackColor = Theme.Panel, ForeColor = Theme.Text, Font = Theme.UI, FormBorderStyle = FormBorderStyle.FixedDialog, MinimizeBox = false, MaximizeBox = false, ShowIcon = false };
+            var t = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(16), BackColor = Theme.Panel };
+            Func<string, Label> lab = x => new Label { Text = x, AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 8, 10, 6) };
+            var tStart = new TextBox { Width = 200, Text = DateTime.Now.AddHours(-1).ToString("yyyy-MM-dd HH:mm") }; Theme.Dark(tStart);
+            var nMin = new SafeNum { Width = 100, Minimum = 1, Maximum = 2000, Value = 60 }; Theme.Dark(nMin);
+            var cCrash = new SafeCombo { DropDownStyle = ComboBoxStyle.DropDownList, Width = 300 }; Theme.Dark(cCrash);
+            cCrash.Items.AddRange(new object[] { History.NoCrash, "crash du jeu (retour au bureau)", "gel / écran noir", "crash GPU (pilote réinitialisé)", "autre (voir la note)" }); cCrash.SelectedIndex = 0;
+            var cStep = new SafeCombo { DropDownStyle = ComboBoxStyle.DropDown, Width = 300, Text = Steps.Current(g.Name) }; Theme.Dark(cStep);
+            cStep.Items.AddRange(Steps.Suggestions); cStep.Text = Steps.Current(g.Name);
+            var tNote = new TextBox { Width = 300, Text = g.Installed == null ? "jeu sans DLSS 5" : "" }; Theme.Dark(tNote);
+            t.Controls.Add(lab("Début (AAAA-MM-JJ HH:MM) :"), 0, 0); t.Controls.Add(tStart, 1, 0);
+            t.Controls.Add(lab("Durée (minutes) :"), 0, 1); t.Controls.Add(nMin, 1, 1);
+            t.Controls.Add(lab("Crash :"), 0, 2); t.Controls.Add(cCrash, 1, 2);
+            t.Controls.Add(lab("Étape de test :"), 0, 3); t.Controls.Add(cStep, 1, 3);
+            t.Controls.Add(lab("Note :"), 0, 4); t.Controls.Add(tNote, 1, 4);
+            var bar = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 50, BackColor = Theme.Panel, Padding = new Padding(16, 6, 10, 0) };
+            var bOk = Theme.Btn("Noter la partie", Theme.Green, 160); var bNo = Theme.Btn("Annuler", Theme.Line, 110);
+            bar.Controls.AddRange(new Control[] { bOk, bNo });
+            f.Controls.Add(t); f.Controls.Add(bar);
+            bNo.Click += (s, e) => f.Close();
+            bOk.Click += (s, e) =>
+            {
+                DateTime st;
+                if (!DateTime.TryParseExact(tStart.Text.Trim(), "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out st))
+                { Error("Début illisible : écris-le comme 2026-10-25 19:30."); return; }
+                History.RecordManual(g.Name, st, (double)nMin.Value, (string)cCrash.SelectedItem, cStep.Text.Trim(), tNote.Text.Trim());
+                Log.W("Partie notée à la main : " + g.Name + ", " + nMin.Value + " min, " + cCrash.SelectedItem + (cStep.Text.Trim() != "" ? ", étape « " + cStep.Text.Trim() + " »" : ""));
+                f.Close(); ShowGame();
+            };
+            f.AcceptButton = bOk; f.CancelButton = bNo;
+            f.ShowDialog(this);
+        }
+
         // =============================================================== historique
         void ShowHistory(Game g)
         {
@@ -1007,16 +1070,25 @@ namespace Dlss5Launcher
                     var l = grp.OrderBy(x => x.Start).ToList();
                     sb.AppendLine("■ " + grp.Key + " — " + l.Count + " partie" + (l.Count > 1 ? "s" : "") + ", " + History.Hours(l.Sum(x => x.Minutes)) + " de jeu");
                     sb.AppendLine();
+                    var cs = History.CompareSteps(l);
+                    if (cs.Count > 0)
+                    {
+                        sb.AppendLine("  Par étape de test (protocole A/B) :");
+                        foreach (var c in cs) sb.AppendLine("    " + c);
+                        sb.AppendLine();
+                    }
                     sb.AppendLine("  Par montage :");
-                    foreach (var c in History.Compare(l)) sb.AppendLine("    " + c);
+                    var cm = History.Compare(l);
+                    if (cm.Count == 0) sb.AppendLine("    (aucune partie avec une mesure du NR)");
+                    foreach (var c in cm) sb.AppendLine("    " + c);
                     sb.AppendLine();
                     sb.AppendLine("  Parties :");
                     foreach (var x in l) sb.AppendLine("    " + History.Line(x));
                     sb.AppendLine();
                 }
-                sb.AppendLine("Seules les parties avec OptiScaler (OptiScaler F5, Feeder F5Low) sont notées : le launcher ne lit pas encore le coût NR");
-                sb.AppendLine("dans les logs de RenoDX et du Feeder ReShade. OptiScaler réécrit son log à chaque lancement : deux parties jouées sans repasser");
-                sb.AppendLine("par le launcher (démarrage, « Lancer le jeu », fiche ou reset) n'en font qu'une, la dernière.");
+                sb.AppendLine("Les parties avec OptiScaler (OptiScaler F5, Feeder F5Low) sont notées toutes seules. Les autres (vanille, RenoDX, Feeder ReShade) :");
+                sb.AppendLine("bouton « Partie à la main ». OptiScaler réécrit son log à chaque lancement : deux parties jouées sans repasser par le launcher");
+                sb.AppendLine("(démarrage, « Lancer le jeu », fiche ou reset) n'en font qu'une, la dernière.");
                 box.Text = sb.ToString();
                 box.SelectionLength = 0;
                 f.Text = all ? "Historique — tous les jeux" : "Historique — " + g.Name;
