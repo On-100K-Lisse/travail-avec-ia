@@ -63,8 +63,8 @@ poids du modèle dans la DLL 310.9 de NVIDIA.
 
 ## Ce qui reste à faire
 
-Les deux configurations non vérifiées (RTX 5070 et RX 9070 XT) sont confiées à deux testeurs. La
-fiche de test du launcher dira, pour chacune :
-- quelle DLL a été installée ;
-- si le NR a démarré ;
-- sur AMD, si le port tournait bien sur le petit modèle.
+- **RX 9070 XT :** confiée à un testeur. Sa fiche de test dira quelle DLL a été installée, si le NR a
+  démarré et si le port tournait bien sur le petit modèle.
+- **RTX 50 :** le testeur prévu sur RTX 5070 ne fera finalement pas de test (25 octobre). Aucun autre
+  test n'est prévu pour l'instant : le choix de la DLL d'origine pour les RTX 50 reste donc une
+  déduction (voir plus haut), pas un résultat. Résultat réel : inconnu (temporaire).
