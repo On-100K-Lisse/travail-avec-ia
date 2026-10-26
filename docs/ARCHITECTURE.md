@@ -1,7 +1,12 @@
 # Agent de veille jeux vidéo — architecture
 
-**État :** conçu et décrit ; le transfert complet vers le portable Debian était
-en attente au dernier état connu (temporaire).
+**État (vérifié le 26 octobre 2026) :** cahier des charges rédigé par **Gemini**
+le 13 août 2026 ; projet **construit au complet par Claude le même jour**
+(environ 27 fichiers, archive `veille-osint.tar.gz`, test hors ligne validé).
+**Jamais déployé** : l'installation sur le portable Debian s'est arrêtée à
+l'étape 1, le mot de passe d'application Gmail — l'agent n'a jamais tourné.
+Histoire reconstituée et vérifiée le 26 octobre 2026 à partir des conversations
+partagées de Claude et de Gemini.
 **But :** surveiller l'actualité de studios et de jeux précis, sans avoir à la
 chercher soi-même chaque jour.
 
@@ -33,6 +38,54 @@ retient que ce qui compte.
 - *The Legend of Zelda* (Nintendo) ;
 - *Life is Strange* ;
 - les exclusivités Nintendo, Sony et Xbox en général.
+
+## Mise à jour du 23 août 2026 — veille hybride (gaming, animés, doublage VF)
+
+Spécifications de **Gemini** (retrouvées dans ses archives et transmises par
+On-100-K-Lisse à Kai le 26 octobre 2026) : la mise à jour transforme l'agent
+initial en veille hybride et précise les cibles et les règles.
+
+### Cibles gaming consolidées
+
+- **Studios** : CD Projekt Red, Rockstar Games, Larian Studios, Pearl Abyss,
+  Dontnod / Square Enix, AdHoc Studio.
+- **Jeux spécifiques ajoutés** : *Minecraft*, *Bodycam*, *Ananta*.
+- **Adaptations de jeux d'animés majeurs** : surveillées, avec une règle
+  d'exclusion stricte des jeux gacha — à l'exception notable d'*Ananta*,
+  explicitement inclus.
+- **Bases de données techniques** : en plus de SteamDB, les backends PSN
+  (PlayStation Network) et Xbox, ainsi que les dépôts GitHub de datamineurs
+  réputés.
+
+### Nouveau volet : les animés ciblés
+
+- *Black Torch*
+- *One Punch Man*
+- *Dragon Ball*
+- *Moi, quand je me réincarne en Slime* (Tensura)
+- *Shangri-La Frontier*
+- *Scissor Seven*
+
+### Vecteurs OSINT spécifiques aux animés et au doublage
+
+- **Métadonnées des plateformes de streaming** : ajouts de fiches, de saisons
+  ou de pistes audio sur Crunchyroll, ADN et Netflix.
+- **Droits et licences** : registres de droits de diffusion et dépôts de
+  marques, incluant l'INPI.
+- **Piste doublage (VF / dubs)** : annonces et CV de comédiens de doublage
+  francophones, et suivi du subreddit r/AnimeDubs.
+
+### Règles et planification
+
+- **Directive de légalité stricte** : exclusion formelle de toute donnée issue
+  de cyberattaques ou de rançongiciels (ransomwares) — collecte 100 % OSINT
+  sur sources publiques, registres légaux, CV et métadonnées.
+- **Matrice de crédibilité A / B** maintenue : A pour les preuves techniques
+  et officielles, B pour les rumeurs crédibles.
+- **Rapport hebdomadaire (niveau 2)** : le cron est réglé pour le **vendredi à
+  17 h 00**, et le prompt Gemini formate un **Top 5** des découvertes
+  marquantes de la semaine — en complément des alertes courriel immédiates de
+  niveau 1.
 
 ## Où ça roule
 
