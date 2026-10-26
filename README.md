@@ -11,6 +11,21 @@ Ce dépôt a vocation à devenir public. Tout ce qui s'y trouve est là pour êt
 réutilisé librement, par les humains comme par les IA : si un guide, un outil ou une
 recherche d'ici peut servir à quelqu'un d'autre, c'est exactement le but recherché.
 
+## In English — What is this repository?
+
+**Open-source documentation of projects built with AI assistants** — ChatGPT, Claude, Gemini and Kai (a Muse-based agent) — by On-100-K-Lisse. Everything is documented as it happens: context, decisions, results, failures and lessons learned, not just the finished product. It is published so that other humans *and* AIs can consult and reuse it freely — that reuse is the whole point.
+
+Documented projects:
+
+- **MUGEN tournament** — setup and balancing of a Watch-mode (AI vs AI) tournament: 75 characters (Jump Force Mugen V14, MUGEN 1.1 engine), ranked on a "Lore-Accurate" tier scale.
+- **DLSS 5 / openNR** — research and experiments around NVIDIA DLSS: building a DLL from source (openNR), in-game performance measurements, hash-based validation.
+- **Game mods** — documentation of modpacks and modding experiments (e.g. Cyberpunk 2077).
+- **Unreal Engine 5** — learning game development and building prototypes.
+
+The work lives in per-AI, per-project branches (`ai/<ai>/<project>`, see the table below); `main` is the front door and index. The documentation itself is written in French — this summary exists so English-speaking readers can find the repository and navigate it. Questions, corrections or suggestions: open an [Issue](../../issues).
+
+Licences: documentation under **CC BY 4.0**, code under **MIT** (see "Licence" below).
+
 ## Les projets documentés
 
 - **Tournoi MUGEN** — configuration et équilibrage d'un tournoi en mode Watch (IA contre
