@@ -379,6 +379,72 @@ namespace Dlss5Launcher
             return list;
         }
 
+        // ---- Xbox / Game Pass (nouvelle app Xbox : <disque>\XboxGames\<jeu>\Content, ou le dossier noté dans <disque>\.GamingRoot)
+        // L'ancien emplacement WindowsApps est verrouillé par Windows : il n'est pas scanné.
+        public static List<Game> Xbox()
+        {
+            var list = new List<Game>();
+            try
+            {
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    try
+                    {
+                        if (drive.DriveType != DriveType.Fixed || !drive.IsReady) continue;
+                        string dr = drive.RootDirectory.FullName;
+                        var roots = new List<string>();
+                        string gr = Path.Combine(dr, ".GamingRoot");
+                        if (File.Exists(gr)) foreach (var rel in ParseGamingRoot(File.ReadAllBytes(gr))) roots.Add(Path.Combine(dr, rel.TrimStart('\\', '/')));
+                        roots.Add(Path.Combine(dr, "XboxGames"));
+                        foreach (var r in roots.Distinct(StringComparer.OrdinalIgnoreCase)) list.AddRange(XboxFolder(r));
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            list = list.GroupBy(x => x.Root.ToLowerInvariant()).Select(x => x.First()).ToList();
+            if (list.Count > 0) Log.W("Xbox : " + list.Count + " jeux.");
+            return list;
+        }
+
+        // .GamingRoot : « RGBX », un compteur, puis des chemins UTF-16 terminés par \0 (relatifs au disque).
+        public static List<string> ParseGamingRoot(byte[] b)
+        {
+            var r = new List<string>();
+            if (b == null || b.Length < 10 || b[0] != 'R' || b[1] != 'G' || b[2] != 'B' || b[3] != 'X') return r;
+            string s = Encoding.Unicode.GetString(b, 8, (b.Length - 8) / 2 * 2);
+            foreach (var p in s.Split('\0'))
+            {
+                string t = p.Trim();
+                if (t.Length > 0 && t.IndexOfAny(Path.GetInvalidPathChars()) < 0) r.Add(t);
+            }
+            return r;
+        }
+
+        public static List<Game> XboxFolder(string root)
+        {
+            var list = new List<Game>();
+            if (!Directory.Exists(root)) return list;
+            foreach (var d in Directory.GetDirectories(root))
+            {
+                string content = Path.Combine(d, "Content");
+                if (!Directory.Exists(content)) continue;
+                string name = Path.GetFileName(d);
+                try
+                {
+                    string cfg = Path.Combine(content, "MicrosoftGame.config");
+                    if (File.Exists(cfg))
+                    {
+                        var m = Regex.Match(File.ReadAllText(cfg), "DefaultDisplayName\\s*=\\s*\"([^\"]+)\"");
+                        if (m.Success && !m.Groups[1].Value.StartsWith("ms-resource", StringComparison.OrdinalIgnoreCase)) name = m.Groups[1].Value;
+                    }
+                }
+                catch { }
+                list.Add(new Game { Name = name, Store = "Xbox", Root = content });
+            }
+            return list;
+        }
+
         public static Game Manual(string folder)
         {
             return new Game { Name = Path.GetFileName(folder.TrimEnd('\\')), Store = "Manuel", Root = folder };
@@ -435,7 +501,12 @@ namespace Dlss5Launcher
             g.Apis.Clear(); g.Upscalers.Clear(); g.AntiCheat.Clear(); g.ForeignMods.Clear(); g.TakenProxyNames.Clear();
             g.Installed = null; g.OneClickInstalled = false; g.Engine = null; g.Dxvk = false; g.ApiSource = null; g.Note = null; g.RecommendedProxy = null; g.CleanPlan = new List<CleanItem>();
             if (g.ExePath == null || !File.Exists(g.ExePath)) g.ExePath = FindMainExe(g.Root);
-            if (g.ExePath == null) { g.Status = GameStatus.ExeIntrouvable; return; }
+            if (g.ExePath == null)
+            {
+                g.Status = GameStatus.ExeIntrouvable;
+                if (g.Store == "Xbox") g.Note = "Exe introuvable : le dossier de ce jeu Xbox est probablement protégé par Windows (jeu qui n'accepte pas les mods).";
+                return;
+            }
             string exeDir = g.ExeDir;
 
             // API. Les moteurs modernes chargent DirectX dynamiquement : il n'apparaît PAS dans les imports.
@@ -536,6 +607,8 @@ namespace Dlss5Launcher
 
             var k = KnownGames.Get(g.ExeName);
             if (k != null) { g.Note = k.Note; g.RecommendedProxy = k.Proxy; }
+            if (g.Note == null && g.Store == "Xbox")
+                g.Note = "Jeu Xbox / Game Pass : les mods ne marchent que si le jeu les accepte (dossier modifiable, pas d'anti-triche). À confirmer jeu par jeu. Lance-le depuis l'app Xbox : « Lancer le jeu » surveille seulement la partie.";
 
             // Statut
             bool hasUpscaler = g.Upscalers.Any(u => u == "DLSS" || u == "FSR" || u == "XeSS" || u == "Streamline");

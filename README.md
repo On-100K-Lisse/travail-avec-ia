@@ -17,7 +17,7 @@ apprises.
 |---|---|
 | [`launcher/`](launcher/) | Le **DLSS 5 Launcher** : ce qu'il fait, comment l'utiliser, comment il fonctionne, son code source (C#) et ses tests |
 | [`launcher/CHANGELOG.md`](launcher/CHANGELOG.md) | Historique des versions, avec ce qui a été corrigé et pourquoi |
-| [`docs/journal-tests-2026-10-24.md`](docs/journal-tests-2026-10-24.md) | Journal des essais en jeu du 24 octobre 2026 (ce qui a marché, les coûts mesurés) |
+| [`docs/journal-tests-2026-10-24.md`](docs/journal-tests-2026-10-24.md) | Journal des essais en jeu des 24 et 25 octobre 2026 (ce qui a marché, les coûts mesurés) |
 | [`docs/analyse-crashs.md`](docs/analyse-crashs.md) | Analyse des crashs (Cyberpunk 2077, Crimson Desert, Species: Unknown) à partir des logs et d'un dump |
 | [`docs/cartes-graphiques.md`](docs/cartes-graphiques.md) | Quelle DLL selon la carte : RTX 20/30/40, RTX 50, AMD / Intel |
 | [`docs/lecons-apprises.md`](docs/lecons-apprises.md) | Les erreurs faites en route et ce qu'elles ont appris |
@@ -30,7 +30,11 @@ apprises.
   clair (la *Ray Reconstruction* de NVIDIA active). La cause du troisième est **inconnue
   (temporaire)**. Voir [`docs/analyse-crashs.md`](docs/analyse-crashs.md).
 - **RTX 50 et AMD (RX 9070 XT) :** pris en charge dans le launcher, mais **pas encore testés sur du
-  vrai matériel**. Résultats : inconnus (temporaire).
+  vrai matériel**. Un test sur RX 9070 XT est prévu ; aucun test RTX 50 n'est prévu pour l'instant.
+  Résultats : inconnus (temporaire). Voir [`docs/cartes-graphiques.md`](docs/cartes-graphiques.md).
+- **Suivi des tests :** le launcher garde l'historique de chaque partie, compare des étapes de test
+  (une variable à la fois), surveille les parties lancées depuis lui et propose des corrections.
+  OptiScaler 0.1.34 a été essayé à côté de la 0.1.32 (Species: Unknown, 1 h 27 sans crash).
 
 ## Lien avec le travail des autres IA
 

@@ -87,6 +87,11 @@ blocages jusqu'à **2,1 ms** sur un appel. Pour ce jeu, la couper ne change rien
 retire une source de surcharge. On ne sait pas si elle a joué un rôle dans le crash : inconnu
 (temporaire).
 
+**Rejeu du 25 octobre :** 1 h 27 sans crash, en Feeder F5Low avec OptiScaler 0.1.34 et le Preset B
+(NR ≈ 3,9 ms au lieu de ≈ 6,0 ms). La recherche de profondeur était encore active et n'a toujours
+rien trouvé. Comme le crash du 24 était arrivé après 2 h 36, ce rejeu ne permet pas de conclure, et
+plusieurs choses ont changé en même temps. Cause : toujours inconnue (temporaire).
+
 ## Ce qui a été changé dans le launcher
 
 | Changement | Pourquoi |
@@ -110,8 +115,9 @@ retire une source de surcharge. On ne sait pas si elle a joué un rôle dans le 
 
 ## À faire
 
-- Rejouer à Species: Unknown sans la recherche de profondeur. La fiche, faite automatiquement au
-  reset, dira si un log ou un rapport de crash d'Unreal existe. Ensuite, confirmer ou corriger
-  l'interprétation de `0x8000`.
+- Rejouer à Species: Unknown sans la recherche de profondeur (bouton « Conseils »), en changeant une
+  seule chose à la fois et assez longtemps : au moins 3 fois les 2 h 36 du premier crash pour que le
+  protocole du launcher puisse conclure. Ensuite, confirmer ou corriger l'interprétation de
+  `0x8000`.
 - Refaire Cyberpunk 2077 avec la RR coupée, puis avec la RR et le « profil sûr RR », pour savoir si
   le schéma se confirme.

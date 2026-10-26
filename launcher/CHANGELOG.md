@@ -174,3 +174,25 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
     entre deux crashs sans planter ; sinon « indice » ou « trop peu pour conclure ».
 - **Vérifié :** 153 vérifications automatiques, lancées deux fois de suite, puis essai sous Windows
   par On-100-K-Lisse le 25 octobre : ça fonctionne.
+
+## 14. Partie surveillée, conseils, versions d'OptiScaler, Xbox — 25 oct.
+
+- **Origine :** idées proposées par Claude, retenues par On-100-K-Lisse.
+- **Partie surveillée :** « Lancer le jeu » attend le démarrage puis la fermeture du jeu, note la
+  partie, et fait la fiche de test tout de suite en cas de crash. Pour une partie sans log OptiScaler,
+  il demande à la fermeture s'il y a eu un crash.
+- **Conseils :** un bouton propose les corrections que la dernière partie justifie (profondeur jamais
+  trouvée, profil sûr RR, profil prudent après un crash GPU, NR trop lourd, dump de crash) et les
+  applique au profil et au jeu installé.
+- **Versions d'OptiScaler côte à côte :** `payload\optiscaler-f5-<version>`, choisie jeu par jeu,
+  notée au manifeste et dans l'historique. La 0.1.34 a été ajoutée au payload d'On-100-K-Lisse : zip
+  vérifié contre le SHA-256 publié par GitHub, fichiers vérifiés contre son `SHA256SUMS.txt`, et
+  sections `[DlssNr]` de son `OptiScaler.ini` comparées à celles de la 0.1.32 (aucun réglage du
+  launcher n'a disparu).
+- **Xbox / Game Pass :** scan de `XboxGames` et du dossier noté dans `.GamingRoot`.
+- **Vérifié :** 177 vérifications automatiques, lancées deux fois de suite, puis essai sous Windows
+  par On-100-K-Lisse le 25 octobre :
+  - le scan a trouvé 11 jeux Xbox ;
+  - une partie de Species: Unknown lancée depuis le launcher a été surveillée du début à la fin
+    (1 h 27) et notée toute seule ;
+  - cette partie tournait avec OptiScaler 0.1.34 : ça fonctionne (voir le journal des essais).

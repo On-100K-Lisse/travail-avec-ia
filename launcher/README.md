@@ -48,7 +48,12 @@ Les jeux 32-bit et DX9 ne sont pas pris en charge.
 ### Le scan
 
 - **Bibliothèques :** Steam (`libraryfolders.vdf` et les `appmanifest_*.acf`), Epic (manifestes
-  `.item`), GOG (registre), et les dossiers ajoutés à la main.
+  `.item`), GOG (registre), Xbox / Game Pass (voir plus bas), et les dossiers ajoutés à la main.
+- **Xbox / Game Pass :** la nouvelle app Xbox installe les jeux dans `<disque>\XboxGames\<jeu>\Content`,
+  ou dans le dossier choisi dans l'app, noté dans le fichier `<disque>\.GamingRoot`. Le launcher
+  lit ces deux endroits sur chaque disque. Le nom du jeu vient de son `MicrosoftGame.config`.
+  L'ancien emplacement `WindowsApps` reste verrouillé par Windows et n'est pas scanné. Un jeu dont
+  le dossier est protégé sort « exe introuvable — probablement protégé » : il n'accepte pas les mods.
 - **Exe principal :** il cherche le vrai exe du jeu. Par exemple, `…-Win64-Shipping.exe` pour Unreal
   plutôt que le petit lanceur à la racine. Il écarte les exe de crash, de setup et d'anti-cheat.
 - **API graphique :**
@@ -84,6 +89,23 @@ bleu = installé, orange = autre mod présent, rouge = anti-cheat, gris = non co
 5. Les DLL d'autres chargeurs de mods, comme le `version.dll` de Cyber Engine Tweaks, un ASI loader
    ou le `dxgi.dll` de dxvk, ne sont **jamais touchées** : il prend un autre nom de proxy.
 6. Chaque fichier copié est revérifié par SHA-256.
+
+### Plusieurs versions d'OptiScaler
+
+La 0.1.32 (`payload\optiscaler-f5`) reste la version testée et celle par défaut. Une autre version se
+met à côté, dans `payload\optiscaler-f5-<version>` (par exemple `optiscaler-f5-0.1.34`), et se
+choisit **jeu par jeu** (case « OptiScaler » de l'onglet Jeu, noté dans `optiscaler-par-jeu.tsv`).
+
+- Le choix compte à la prochaine installation : un jeu déjà installé doit être réinitialisé puis
+  réinstallé.
+- L'installation copie les fichiers de la version choisie et part de **son** `OptiScaler.ini`. Le
+  manifeste note la version, et « Appliquer » repart du modèle de la version installée.
+- Le docteur payload vérifie chaque version ajoutée à part (fichiers présents et intacts, version
+  reconnue par son hash quand elle est connue). Installer une version autre que la 0.1.32 demande une
+  confirmation, puisqu'elle n'a pas été validée avec le launcher.
+- L'historique lit la version dans la première ligne d'`OptiScaler.log`
+  (`OptiScaler v0.1.34-final … loaded`) et s'en sert pour comparer les montages. Avec une étape de
+  test, « 0.1.32 contre 0.1.34 » se compare comme le reste.
 
 ### Le docteur payload
 
@@ -126,6 +148,26 @@ qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le
 - Si une DLL que le jeu avait peut-être d'origine a dû partir sans copie à remettre, il propose la
   vérification des fichiers Steam.
 
+### Les conseils (bouton « 🩺 Conseils »)
+
+Le launcher relit la dernière partie du jeu (le log dans le dossier du jeu, ou le dernier journal
+archivé après un reset) et propose des corrections à cocher. « Appliquer » change le profil du jeu,
+puis réécrit l'INI du jeu s'il est installé.
+
+| Ce que la partie montre | Correction proposée |
+|---|---|
+| Feeder F5Low : la recherche de profondeur n'a jamais trouvé la profondeur (au moins 90 % des rapports, et aucune image avec profondeur) | Couper la recherche de profondeur |
+| Le jeu a la Ray Reconstruction et le profil sûr RR est coupé | Réactiver le profil sûr RR |
+| Un crash GPU avec un réglage lourd (Preset A, modèle au-dessus de 0,67, ou plusieurs passes) | Profil prudent : Preset B, modèle à 0,6, 1 passe |
+| Sans crash, un NR à 8 ms ou plus avec un réglage lourd | Alléger : Preset B, modèle à 0,67 |
+| Un crash, et le dump de crash coupé | Activer le dump de crash |
+| Le modèle créé plus de 3 fois | Rien à cocher : conseil de régler l'effet dans le launcher plutôt qu'en pleine partie |
+
+Le « réglage lourd » tient compte de l'INI réellement installé : si le menu du jeu y a remis du
+Preset A alors que le profil dit B, le conseil le signale. Une fois appliqué, un conseil n'est plus
+proposé. Le launcher propose aussi de ranger les parties suivantes sous l'étape « après : … », pour
+voir dans l'historique si la correction a marché.
+
 ### Les réglages
 
 - **Un profil par jeu**, gardé automatiquement.
@@ -151,6 +193,13 @@ qui ressemblent à un bug du launcher. Le « docteur payload » vérifie donc le
 - Le détail du jeu affiche le **coût réel du NR** de la dernière session, lu dans
   `OptiScaler.log`, avec un conseil.
 - **Historique des parties** : voir [plus bas](#lhistorique-des-parties).
+- **Partie surveillée** (« ▶ Lancer le jeu ») : le launcher attend que le processus du jeu démarre
+  (même s'il est lancé par Steam), puis qu'il se ferme. Il note alors la partie tout seul et, si un
+  crash est détecté dans le log, crée la fiche de test et le dit. Pour une partie sans log
+  OptiScaler (vanille, RenoDX, Feeder ReShade), il demande à la fermeture si le jeu a planté et note
+  la durée mesurée. Si le jeu se relance lui-même (lanceur, anti-triche), la surveillance continue.
+  Pour un jeu Xbox, le bouton s'appelle « Surveiller la partie » : on lance le jeu depuis l'app Xbox.
+  Le launcher doit rester ouvert pendant la partie.
 - **Réinitialiser crée automatiquement une fiche de test juste avant le reset**. Une fiche faite
   après un reset lit le dernier journal archivé du jeu. On peut donc réinitialiser dès qu'un problème
   arrive, sans perdre les informations.
@@ -191,7 +240,7 @@ sur le PC de l'utilisateur et n'est jamais copié dans une copie pour un ami (pa
   jeux » fait le même résumé pour chaque jeu.
 - **Limites :**
   - OptiScaler réécrit son log à chaque lancement du jeu : deux parties jouées sans repasser par le
-    launcher n'en font qu'une, la dernière ;
+    launcher n'en font qu'une, la dernière (la partie surveillée règle ce cas) ;
   - les journaux archivés par une version plus ancienne n'ont pas de manifeste : la carte et la DLL
     y sont « inconnue » ;
   - le premier quart des mesures peut contenir des menus, qui coûtent moins cher : une hausse en fin
@@ -249,6 +298,7 @@ payload\
   amd\              contenu de Optional-Vendor-Neutral-DLSS5-Forwarder.zip (nvngx.dll_dlssnr.dll, nr_port.ini)
   renodx\           dxgi.dll (ReShade avec addons), renodx-dlss5.addon64, ReShade.ini
   feeder-reshade\   dlss5-feed.addon64, dlss5-feed.cfg, shaders\, textures\, nvngx_dlss.dll
+  optiscaler-f5-<version>\   facultatif : une autre version d'OptiScaler F5, même contenu que optiscaler-f5\
 ```
 
 | Composant | Où l'obtenir |
@@ -273,6 +323,11 @@ D3D12) sont aussi vérifiés, et leurs hashs sont dans `src/Doctor.cs`.
 | `dxgi.dll` (ReShade 6.8.0 avec addons, payload 1-Click) | `0CEE63F9C9F13F3AC909C5B4903F4DBB4B719A7AB3B4F13B0DEAF83C814B94F7` |
 | `renodx-dlss5.addon64` | `D5ADF82EB44B065F4C590AC91FE824BAB07AFEA0EB9F994BDE936710C8593952` |
 | `dlss5-feed.addon64` | `066EEC8C797DF2D656F2AB2324278921B1DD6E9116C9945294F4A00F7FEC608A` |
+| `OptiScaler-DLSSNR-F5-v0.1.34-with-dlss-fg.zip` (0.1.34, facultatif) | `F1F0D8777FB337F8A89451B652FDC09ECD6C8B76AB96B20F1E4452EB5EEFC11A` (identique à celui publié par GitHub) |
+| `OptiScaler.dll` (F5 0.1.34) | `FD35BC693BA4133FA10E9746CE84486D617BB2AC5AE76E096FBAB77B28C8BAA2` |
+| `nvngx.dll_dlssnr.dll` (forwarder NVIDIA, F5 0.1.34) : **différent** de celui de la 0.1.32 | `42E76FB30E652F098556BDEF5B0165CB7C06F779AC23177B05DED2011D7F6655` |
+
+Le zip du port vendor-neutral de la 0.1.34 a le même hash que celui de la 0.1.32 : il n'a pas changé.
 
 ## Utilisation
 
@@ -296,12 +351,12 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 | Fichier | Rôle |
 |---|---|
-| `Core.cs` | Chemins, journal, hash, lecture/écriture d'INI par section, lecture d'en-tête PE, scan des bibliothèques, analyse d'un jeu, logs des moteurs (Unity / Unreal), détection de la carte graphique |
-| `Install.cs` | Réglages et préréglages, génération des INI, manifeste, installation, réinitialisation, garde-fous de stabilité, mesure du coût NR, diagnostic, fiche de test, copie pour un ami |
+| `Core.cs` | Chemins, journal, hash, lecture/écriture d'INI par section, lecture d'en-tête PE, scan des bibliothèques (dont Xbox), analyse d'un jeu, logs des moteurs (Unity / Unreal), détection de la carte graphique |
+| `Install.cs` | Réglages et préréglages, génération des INI, manifeste, installation, réinitialisation, garde-fous de stabilité, mesure du coût NR, diagnostic, conseils applicables, fiche de test, copie pour un ami |
 | `Cleaner.cs` | Réinitialisation universelle : manifeste du 1-Click, reconnaissance des restes de mods, quarantaine et annulation |
-| `Doctor.cs` | Docteur payload : hashs des fichiers connus, vérification du `payload\`, détection d'une DLL coupée, rapport |
+| `Doctor.cs` | Docteur payload : hashs des fichiers connus, vérification du `payload\`, détection d'une DLL coupée, rapport ; versions d'OptiScaler côte à côte |
 | `History.cs` | Historique des parties : lecture d'une partie dans `OptiScaler.log`, `historique.csv`, reprise des journaux archivés, comparaison des montages ; étapes de test (`etapes.tsv`), parties notées à la main, comparaison des étapes et verdict |
-| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, fenêtre d'historique, étape de test, partie à la main, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
+| `Ui.cs` | Fenêtre (thème sombre), onglets Jeu / Réglages NR / Journal, profils par jeu, rapport du docteur payload, fenêtre d'historique, étape de test, partie à la main, partie surveillée, conseils, choix de la version d'OptiScaler, blocage anti-cheat, molette qui ne change jamais une valeur par accident |
 | `COMPILER.bat` | Recompile l'exe avec le compilateur C# inclus dans Windows (`csc.exe` de .NET Framework 4) |
 
 ### Compiler
@@ -320,13 +375,16 @@ Le code source est dans [`src/`](src/). Il est sous licence MIT.
 
 ### Tests
 
-[`tests/Test.cs`](tests/Test.cs) contient **153 vérifications automatiques**. Elles tournent sur de
+[`tests/Test.cs`](tests/Test.cs) contient **177 vérifications automatiques**. Elles tournent sur de
 faux jeux, avec un faux payload : installation, réglages, réinitialisation identique au hash près,
 nettoyage d'un 1-Click et d'une installation manuelle, détection Unity / Unreal, mode AMD, RTX 50,
 diagnostic de crash, fiche de test faite après un reset, docteur payload (fichier coupé, vide,
 inconnu, autre version, mélange de versions), copie pour un ami et historique (durée, partie qui
 passe minuit, crash, doublons, comparaison Preset A / B, reprise des journaux) et protocole de test
-(étape active au bon moment, les quatre verdicts, ancien `historique.csv` toujours lisible). Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+(étape active au bon moment, les quatre verdicts, ancien `historique.csv` toujours lisible),
+versions d'OptiScaler (installation, réglages, historique, reset), scan Xbox (`.GamingRoot`,
+`MicrosoftGame.config`, dossier protégé) et conseils. La partie surveillée dépend de Windows et
+n'a été essayée que dans une fenêtre de test sous Linux, puis sous Windows par On-100-K-Lisse. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
 mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs src/History.cs   # + les -r: ci-dessus
@@ -340,7 +398,11 @@ Ces tests ne remplacent pas Windows ni un vrai GPU : ce qui a été vérifié en
 
 - Le statut « Compatible » est une **déduction** à partir des fichiers du jeu. La preuve reste le
   statut NR dans le menu du jeu, ou la fiche de test.
-- Xbox / Game Pass n'est pas scanné (dossiers `WindowsApps` verrouillés).
+- Xbox / Game Pass : seuls les jeux de la nouvelle app Xbox (`XboxGames`) sont scannés, et seuls
+  ceux dont le dossier est modifiable acceptent les mods. L'injection elle-même n'a pas encore été
+  essayée dans un jeu Xbox : inconnu (temporaire).
+- La partie surveillée demande que le launcher reste ouvert. Le processus est reconnu par le nom et
+  le chemin de l'exe : un jeu dont le vrai exe n'est pas celui trouvé par le scan ne sera pas vu.
 - Jeux 32-bit et DX9 non pris en charge.
 - Le nettoyage reconnaît ReShade, mais pas *pourquoi* il est là. Un ReShade installé pour autre chose
   (presets de couleur) part aussi en quarantaine. Il est listé avant confirmation, et récupérable.

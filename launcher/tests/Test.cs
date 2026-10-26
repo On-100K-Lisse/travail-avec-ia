@@ -491,6 +491,89 @@ class T {
       var old=History.Load(); File.WriteAllText(History.FilePath,bak);
       Ok(old.Count==1 && old[0].Step=="" && Math.Abs(old[0].Avg-6.0)<0.01 && old[0].Crashed,"historique : un ancien fichier sans colonne Étape reste lisible");
     }
+    // ===== VERSIONS D'OPTISCALER =====
+    Console.WriteLine("-- versions d'OptiScaler --");
+    {
+      string vf="optiscaler-f5-0.1.99", vd=Path.Combine(AppPaths.Payload,vf);
+      if(Directory.Exists(vd)) Directory.Delete(vd,true);
+      Directory.CreateDirectory(Path.Combine(vd,"OptiScaler","sub"));
+      File.Copy(exe,Path.Combine(vd,"OptiScaler.dll")); File.Copy(reshade,Path.Combine(vd,"nvngx.dll_dlssnr.dll"));
+      File.WriteAllText(Path.Combine(vd,"OptiScaler.ini"),Ini.ReadFile(Path.Combine(AppPaths.OptiDir,"OptiScaler.ini"))+"\r\n[MarqueurVersion]\r\nVersion=0.1.99\r\n");
+      for(int i=0;i<11;i++) File.WriteAllText(Path.Combine(vd,"OptiScaler","sub","f"+i+".txt"),"x");
+      var fo=OptiVersions.Folders();
+      Ok(fo.Count>=2 && fo[0]==OptiVersions.Default && fo.Contains(vf),"versions : la 0.1.32 en premier, la version ajoutée trouvée");
+      Ok(OptiVersions.Version(vf)=="0.1.99" && OptiVersions.Label(vf).Contains("ajoutée") && OptiVersions.Label(OptiVersions.Default).Contains("testée"),"versions : libellés (testée / ajoutée)");
+      string gver="Jeu Version "+Guid.NewGuid().ToString("N").Substring(0,6);
+      Ok(OptiVersions.For(gver)==OptiVersions.Default,"versions : la 0.1.32 par défaut");
+      OptiVersions.Set(gver,vf); Ok(OptiVersions.For(gver)==vf,"versions : choix gardé par jeu");
+      var dit=PayloadDoctor.Check();
+      var ex=dit.Where(x=>x.Extra && x.Folder==vf).ToList();
+      Ok(ex.Count==4 && ex.All(x=>x.State==PState.Ok) && ex.Any(x=>x.Detail!=null && x.Detail.Contains("pas encore validée")),"docteur : version ajoutée vérifiée (4 éléments, intacts, « pas encore validée »)");
+      Ok(PayloadDoctor.Report(dit,false).Contains("=== Autres versions d'OptiScaler"),"docteur : section des autres versions");
+      var pv=PayloadDoctor.ProblemsFor(InstallMode.OptiScaler,vf);
+      Ok(!pv.Any(x=>x.Rel.StartsWith(@"optiscaler-f5\")),"docteur avant install : avec une autre version, la 0.1.32 n'est pas regardée");
+      string vr=Path.Combine(work,"jeu-version"); var gvv=Make(vr,exe); gvv.Name=gver;
+      new Installer(gvv).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(gvv);
+      Ok(gvv.Installed.Opti==vf && Hash.Sha(Path.Combine(gvv.ExeDir,gvv.Installed.Proxy))==Hash.Sha(exe) && File.ReadAllText(Path.Combine(gvv.ExeDir,"OptiScaler.ini")).Contains("[MarqueurVersion]"),"installation : fichiers et modèle d'INI de la version choisie, notée au manifeste");
+      new Installer(gvv).ApplySettings(new NrSettings{Preset=1});
+      Ok(File.ReadAllText(Path.Combine(gvv.ExeDir,"OptiScaler.ini")).Contains("[MarqueurVersion]"),"appliquer des réglages : repart du modèle de la version installée");
+      File.WriteAllText(Path.Combine(gvv.ExeDir,"OptiScaler.log"),"[20:00:00.1] [W] OptiScaler v0.1.99-final (abc) loaded\n[20:00:01.0] [I] DlssNr model input 1552x864 (preset 1)\n[20:30:00.0] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 5.00 ms total\n");
+      var sv=History.RecordLive(gvv);
+      Ok(sv!=null && sv.Opti=="0.1.99" && History.Compare(new List<Session>{sv})[0].Contains("OptiScaler F5 (0.1.99)"),"historique : version d'OptiScaler lue dans le log et utilisée pour comparer");
+      Ok(new Installer(gvv).Reset().Count==0,"reset d'une install avec une autre version");
+      OptiVersions.Set(gver,OptiVersions.Default); Directory.Delete(vd,true);
+      Ok(OptiVersions.For(gver)==OptiVersions.Default && !OptiVersions.Folders().Contains(vf),"versions : retour à la 0.1.32 (dossier retiré)");
+    }
+    // ===== XBOX =====
+    Console.WriteLine("-- xbox --");
+    {
+      var b=new List<byte>(System.Text.Encoding.ASCII.GetBytes("RGBX")); b.AddRange(new byte[]{1,0,0,0}); b.AddRange(System.Text.Encoding.Unicode.GetBytes("\\Jeux Xbox\0"));
+      var pr=Scanner.ParseGamingRoot(b.ToArray());
+      Ok(pr.Count==1 && pr[0]=="\\Jeux Xbox","Xbox : .GamingRoot lu (dossier de jeux choisi dans l'app)");
+      Ok(Scanner.ParseGamingRoot(new byte[]{1,2,3,4,5,6,7,8,9,10}).Count==0,"Xbox : .GamingRoot invalide ignoré");
+      string xr=Path.Combine(work,"XboxGames"); var c1=Path.Combine(xr,"SuperJeu","Content"); var c2=Path.Combine(xr,"AutreJeu","Content"); Directory.CreateDirectory(c1); Directory.CreateDirectory(c2); Directory.CreateDirectory(Path.Combine(xr,"PasUnJeu"));
+      File.WriteAllText(Path.Combine(c1,"MicrosoftGame.config"),"<Game><ShellVisuals DefaultDisplayName=\"Super Jeu : Édition\" /></Game>");
+      File.WriteAllText(Path.Combine(c2,"MicrosoftGame.config"),"<Game><ShellVisuals DefaultDisplayName=\"ms-resource:Title\" /></Game>");
+      var bin=Path.Combine(c1,"SuperJeu","Binaries","WinGDK"); Directory.CreateDirectory(bin); File.Copy(exe,Path.Combine(bin,"SuperJeu-WinGDK-Shipping.exe"));
+      File.WriteAllText(Path.Combine(c1,"gamelaunchhelper.exe"),"MZ");
+      var xs=Scanner.XboxFolder(xr).OrderBy(x=>x.Name).ToList();
+      Ok(xs.Count==2 && xs.Any(x=>x.Name=="Super Jeu : Édition") && xs.Any(x=>x.Name=="AutreJeu") && xs.All(x=>x.Store=="Xbox" && x.Root.EndsWith("Content")),"Xbox : jeux trouvés, nom lu dans MicrosoftGame.config (sinon le dossier)");
+      var x1=xs.First(x=>x.Name.StartsWith("Super")); Scanner.Analyze(x1);
+      Ok(x1.ExePath!=null && x1.ExePath.EndsWith("SuperJeu-WinGDK-Shipping.exe") && x1.Engine=="Unreal" && x1.Note!=null && x1.Note.Contains("Xbox"),"Xbox : vrai exe (WinGDK-Shipping, pas gamelaunchhelper), note Xbox");
+      var x2=xs.First(x=>x.Name=="AutreJeu"); Scanner.Analyze(x2);
+      Ok(x2.Status==GameStatus.ExeIntrouvable && x2.Note.Contains("protégé"),"Xbox : dossier sans exe lisible → « probablement protégé »");
+    }
+    // ===== CONSEILS =====
+    Console.WriteLine("-- conseils --");
+    {
+      string crd=Path.Combine(work,"jeu-conseil"); var gc=Make(crd,exe); gc.Name="Jeu Conseil "+Guid.NewGuid().ToString("N").Substring(0,6);
+      var stc=new NrSettings{FUseDepth=true}; new Installer(gc).Install(InstallMode.Feeder,stc,null); Scanner.Analyze(gc);
+      var sb2=new System.Text.StringBuilder("[20:00:00.1] [W] OptiScaler v0.1.32-final loaded\n");
+      for(int i=0;i<12;i++) sb2.Append("[20:0"+(i%10)+":10.0] [I] x Depth finder: frame "+(i*100)+" candidates 3, none qualifies, longest 2100.0 us\n");
+      sb2.Append("[20:10:00.0] [I] x Native motion (D3D12) frames: of 100 presents, flow valid 99 (matched with depth 0)\n");
+      for(int i=0;i<5;i++) sb2.Append("[20:10:0"+i+".0] [I] DLSS-NR model feature created\n");
+      sb2.Append("[20:20:00.0] [I] DlssNr model input 2560x1440 (preset 1)\n[20:20:01.0] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 11.00 ms total\n");
+      sb2.Append("[20:30:00.0] [E] Util::GetDeviceRemovedReason Device removed reason: DXGI_ERROR_DEVICE_HUNG\n");
+      File.WriteAllText(Path.Combine(gc.ExeDir,"OptiScaler.log"),sb2.ToString());
+      var cur=new NrSettings{FUseDepth=true,Preset=1,FWorkingScale=1.0m,CrashDump=false};
+      var fx=Report.Fixes(gc,cur);
+      Ok(fx.Any(x=>x.Id=="profondeur") && fx.Any(x=>x.Id=="prudent") && fx.Any(x=>x.Id=="dump") && fx.Any(x=>x.Id=="recreations" && x.Apply==null) && !fx.Any(x=>x.Id=="leger"),"conseils : profondeur, profil prudent (crash GPU), dump, et recréations (à faire soi-même) : "+string.Join(",",fx.Select(x=>x.Id)));
+      foreach(var x in fx.Where(x=>x.Apply!=null)) x.Apply(cur);
+      Ok(!cur.FUseDepth && cur.Preset==2 && cur.FWorkingScale==0.6m && cur.CrashDump,"conseils appliqués aux réglages (profondeur coupée, Preset B, modèle 0,6, dump)");
+      Ok(Report.Fixes(gc,cur).All(x=>x.Apply==null),"conseils : une fois appliqués, ils ne sont plus proposés");
+      new Installer(gc).Reset(); Scanner.Analyze(gc);
+      Ok(Report.Fixes(gc,new NrSettings{FUseDepth=true,Preset=1}).Any(x=>x.Id=="profondeur"),"conseils : marchent aussi après un reset (journal archivé)");
+      string cr2=Path.Combine(work,"jeu-conseil2"); var gc2=Make(cr2,exe); gc2.Name="Jeu Conseil2 "+Guid.NewGuid().ToString("N").Substring(0,6);
+      new Installer(gc2).Install(InstallMode.OptiScaler,new NrSettings(),null); Scanner.Analyze(gc2);
+      File.WriteAllText(Path.Combine(gc2.ExeDir,"OptiScaler.log"),"[20:00:00.1] [W] OptiScaler v0.1.32-final loaded\n[20:00:01.0] [I] DlssNr model input 2560x1440 (preset 1)\n[20:20:01.0] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 9.50 ms total\n");
+      var fx2=Report.Fixes(gc2,new NrSettings{Preset=1,WorkingScale=1.0m});
+      Ok(fx2.Count==1 && fx2[0].Id=="leger","conseils : NR lourd sans crash → alléger seulement");
+      var inip=Path.Combine(gc2.ExeDir,"OptiScaler.ini"); File.WriteAllText(inip,Ini.Set(Ini.ReadFile(inip),"DlssNr","Preset","1"));   // comme si le menu du jeu l'avait changé
+      var fx3=Report.Fixes(gc2,new NrSettings{Preset=2,WorkingScale=0.67m});
+      Ok(fx3.Count==1 && fx3[0].Why.Contains("le menu du jeu"),"conseils : profil léger mais le log montre du Preset A → le dire et réécrire l'INI");
+      File.WriteAllText(Path.Combine(gc2.ExeDir,"OptiScaler.log"),"[20:00:00.1] [W] OptiScaler v0.1.32-final loaded\n[20:00:01.0] [I] DlssNr model input 1376x784 (preset 2)\n[20:20:01.0] [I] DlssNr_Dx12::Dispatch DLSS-NR elapsed: 3.50 ms total\n");
+      Ok(Report.Fixes(gc2,new NrSettings{Preset=2,WorkingScale=0.67m}).Count==0,"conseils : rien à dire quand le réglage est déjà léger");
+    }
     // 5. 32-bit refusé
     Console.WriteLine(fails==0?"\nTOUS LES TESTS PASSENT":"\n"+fails+" ÉCHEC(S)");
   }

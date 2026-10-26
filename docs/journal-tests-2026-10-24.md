@@ -49,12 +49,41 @@ est dans `HARDWARE_ENV.md` sur `main`.
 5. **Les crashs ne sont pas tous pareils.** Cyberpunk et Crimson Desert partagent un schéma clair
    (Ray Reconstruction). Species: Unknown est différent.
 
+## Essais du 25 octobre (soir)
+
+Ces chiffres viennent de l'historique du launcher (`historique.csv`), qui les lit dans
+`OptiScaler.log`. Carte : RTX 4070, DLL NR openNR 310.9.16 compat-fp16.
+
+| Jeu | Étape de test | Méthode, version | Réglages NR | Durée | Coût NR | Résultat |
+|---|---|---|---|---|---|---|
+| Cyberpunk 2077 | 2 - DLSS 5 seul | OptiScaler F5 0.1.32 | Preset B, modèle 1376×784 | 3 min | ≈ 3,4 ms | Aucun crash |
+| Species: Unknown | — | Feeder F5Low 0.1.32 | Preset B, modèle 1552×864 | 2 min | ≈ 3,7 ms | Aucun crash |
+| Species: Unknown | 2 - DLSS 5 seul | **Feeder F5Low 0.1.34** | Preset B, modèle 1552×864 (échelle 0,67) | **1 h 27** | ≈ 3,9 ms (3,5 à 5,3) | **Aucun crash** |
+
+À retenir :
+
+- **OptiScaler 0.1.34 fonctionne** dans Species: Unknown, en Feeder F5Low, sur 1 h 27.
+- **En Preset B, le NR coûte environ deux fois moins** dans Species: Unknown : ≈ 3,9 ms contre
+  ≈ 6,0 ms en Preset A le 24 octobre, avec la même taille de modèle (1552×864).
+- **Le crash `0x8000` n'est ni confirmé ni écarté.** Le 24 octobre, il était arrivé après 2 h 36 ;
+  1 h 27 sans crash ne suffit pas pour conclure. Plusieurs choses ont aussi changé en même temps
+  (Preset A → B, OptiScaler 0.1.32 → 0.1.34). Le protocole de test du launcher dira « trop peu pour
+  conclure » tant qu'il n'y aura pas assez de temps de jeu.
+- **La recherche de profondeur était encore active**, et ne l'a toujours pas trouvée (« matched with
+  depth 0 »). Le conseil « couper la recherche de profondeur » reste à essayer.
+- **Cyberpunk 2077 :** l'étape « DLSS 5 seul » n'a duré que 3 minutes. Une partie « vanille » a
+  aussi été notée à la main, avec les valeurs proposées par défaut (1 h) : c'était probablement un
+  essai du bouton, donc elle n'est pas comptée ici. Il faut beaucoup plus de jeu avant de comparer
+  les étapes.
+
 ## Pas encore testé
 
 | Configuration | État |
 |---|---|
-| Carte RTX 50 (une RTX 5070 chez un testeur) | Inconnu (temporaire) |
+| Carte RTX 50 | Inconnu (temporaire) : le testeur prévu ne fera pas de test, aucun autre n'est prévu |
 | Carte AMD (une RX 9070 XT chez un testeur), port vendor-neutral | Inconnu (temporaire) |
 | Génération d'images XeFG / FSR FG du launcher | Inconnu (temporaire) |
 | Étalonnage LUT, protection peau / décor | Inconnu (temporaire) |
 | Cyberpunk 2077 avec la Ray Reconstruction coupée et le « profil sûr RR » | Inconnu (temporaire) |
+| Injection dans un jeu Xbox / Game Pass | Inconnu (temporaire) : le scan les trouve, aucune installation essayée |
+| OptiScaler 0.1.34 avec la méthode OptiScaler F5 (jeux avec upscaler) | Inconnu (temporaire) : seulement essayée en Feeder F5Low |

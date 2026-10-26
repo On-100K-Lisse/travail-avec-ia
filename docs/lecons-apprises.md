@@ -104,7 +104,7 @@ le launcher n'avait rien de cassé.
 
 ## 9. Les tests automatiques ne remplacent pas le jeu
 
-Le launcher a 153 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
+Le launcher a 177 vérifications automatiques sur de faux jeux. Elles ont attrapé de vraies
 erreurs : ordre de restauration, fichiers oubliés, mauvais réglages d'INI. Mais aucun de ces tests
 n'aurait trouvé les leçons 1, 2, 3 et 5 : il a fallu Windows, un vrai jeu et un humain devant
 l'écran.

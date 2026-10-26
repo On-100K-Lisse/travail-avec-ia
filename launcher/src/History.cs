@@ -12,7 +12,8 @@ namespace Dlss5Launcher
 {
     public class Session
     {
-        public string Key, Game, Card, Method, Dll, Preset, Model, Crash, Source, Step = "", Note = "";
+        public string Key, Game, Card, Method, Dll, Preset, Model, Crash, Source, Step = "", Note = "", Opti = "";
+        public string MethodText { get { return Method + (string.IsNullOrEmpty(Opti) ? "" : " (" + Opti + ")"); } }
         public DateTime Start, End;
         public double Minutes, Avg, Min, Max, P95, First, Last;
         public int Samples, Creations;
@@ -30,7 +31,7 @@ namespace Dlss5Launcher
         static readonly object Lk = new object();
         public static string FilePath { get { return Path.Combine(AppPaths.Root, "historique.csv"); } }
 
-        static readonly string[] Cols = { "Début", "Fin", "Durée (min)", "Jeu", "Carte", "Méthode", "DLL NR", "Preset", "Modèle",
+        static readonly string[] Cols = { "Début", "Fin", "Durée (min)", "Jeu", "Carte", "Méthode", "OptiScaler", "DLL NR", "Preset", "Modèle",
             "NR moyen (ms)", "NR min", "NR max", "NR p95", "NR début de partie", "NR fin de partie", "Mesures", "Créations du modèle", "Crash", "Étape", "Note", "Source", "Clé" };
 
         // ------------------------------------------------------------ lecture d'un log
@@ -63,6 +64,8 @@ namespace Dlss5Launcher
             s.Creations = Regex.Matches(text, @"model feature created").Count;
             s.Crash = CrashType(text);
             s.Step = Steps.At(gameName, s.End);
+            var ov = Regex.Match(text, @"OptiScaler v(\d+\.\d+\.\d+)");   // 1re ligne du log : « OptiScaler v0.1.32-final … loaded »
+            if (ov.Success) s.Opti = ov.Groups[1].Value;
             s.Method = m != null ? m.ModeLabel : "inconnue";
             s.Card = m != null && !string.IsNullOrEmpty(m.Card) ? m.Card : m != null && !string.IsNullOrEmpty(m.GpuMode) ? m.GpuMode : "inconnue";
             var e = m == null ? null : m.Entries.FirstOrDefault(x => x.Rel.Equals("nvngx_dlssnr.dll", StringComparison.OrdinalIgnoreCase) && x.Kind != "MOVED");
@@ -101,7 +104,7 @@ namespace Dlss5Launcher
                     var s = new Session
                     {
                         Start = Dt(col(p, "Début")), End = Dt(col(p, "Fin")), Minutes = Num(col(p, "Durée (min)")), Game = col(p, "Jeu"), Card = col(p, "Carte"),
-                        Method = col(p, "Méthode"), Dll = col(p, "DLL NR"), Preset = col(p, "Preset") == "A" ? "1" : col(p, "Preset") == "B" ? "2" : col(p, "Preset"),
+                        Method = col(p, "Méthode"), Opti = col(p, "OptiScaler"), Dll = col(p, "DLL NR"), Preset = col(p, "Preset") == "A" ? "1" : col(p, "Preset") == "B" ? "2" : col(p, "Preset"),
                         Model = col(p, "Modèle"), Avg = Num(col(p, "NR moyen (ms)")), Min = Num(col(p, "NR min")), Max = Num(col(p, "NR max")), P95 = Num(col(p, "NR p95")),
                         First = Num(col(p, "NR début de partie")), Last = Num(col(p, "NR fin de partie")), Samples = (int)Num(col(p, "Mesures")),
                         Creations = (int)Num(col(p, "Créations du modèle")), Crash = col(p, "Crash"), Step = col(p, "Étape"), Note = col(p, "Note"), Source = col(p, "Source"), Key = col(p, "Clé")
@@ -118,7 +121,7 @@ namespace Dlss5Launcher
             sb.AppendLine(string.Join(";", Cols));
             foreach (var s in all.OrderBy(x => x.Start))
                 sb.AppendLine(string.Join(";", new[] {
-                    s.Start.ToString("yyyy-MM-dd HH:mm"), s.End.ToString("yyyy-MM-dd HH:mm"), N(s.Minutes, "0"), s.Game, s.Card, s.Method, s.Dll, s.PresetText, s.Model ?? "",
+                    s.Start.ToString("yyyy-MM-dd HH:mm"), s.End.ToString("yyyy-MM-dd HH:mm"), N(s.Minutes, "0"), s.Game, s.Card, s.Method, s.Opti, s.Dll, s.Samples > 0 ? s.PresetText : "", s.Model ?? "",
                     N(s.Avg), N(s.Min), N(s.Max), N(s.P95), N(s.First), N(s.Last), s.Samples.ToString(), s.Creations.ToString(), s.Crash, s.Step, s.Note, s.Source, s.Key }.Select(Clean)));
             string tmp = FilePath + ".tmp";
             File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(true));   // BOM : Excel l'ouvre avec les accents
@@ -195,7 +198,7 @@ namespace Dlss5Launcher
         public static List<string> Compare(List<Session> ss)
         {
             var r = new List<string>();
-            foreach (var grp in ss.Where(x => x.Samples > 0).GroupBy(x => x.Method + " · " + DllShort(x.Dll) + " · Preset " + x.PresetText + (string.IsNullOrEmpty(x.Model) ? "" : " · modèle " + x.Model)).OrderBy(x => x.Key))
+            foreach (var grp in ss.Where(x => x.Samples > 0).GroupBy(x => x.MethodText + " · " + DllShort(x.Dll) + " · Preset " + x.PresetText + (string.IsNullOrEmpty(x.Model) ? "" : " · modèle " + x.Model)).OrderBy(x => x.Key))
             {
                 var l = grp.ToList();
                 double minutes = l.Sum(x => x.Minutes);
@@ -217,7 +220,7 @@ namespace Dlss5Launcher
             {
                 var l = st.ToList(); double minutes = l.Sum(x => x.Minutes); int crashes = l.Count(x => x.Crashed);
                 int meas = l.Sum(x => x.Samples);
-                var methods = l.Select(x => x.Samples > 0 ? x.Method + " · Preset " + x.PresetText : x.Method).Distinct().ToList();
+                var methods = l.Select(x => x.Samples > 0 ? x.MethodText + " · Preset " + x.PresetText : x.Method).Distinct().ToList();
                 r.Add("« " + st.Key + " » : " + l.Count + " partie" + (l.Count > 1 ? "s" : "") + ", " + Hours(minutes) +
                       (meas > 0 ? ", NR ≈ " + N(l.Sum(x => x.Avg * x.Samples) / meas) + " ms" : "") +
                       (crashes > 0 ? ", " + crashes + " crash" + (crashes > 1 ? "s" : "") + " (un toutes les " + Hours(minutes / crashes) + ")" : ", aucun crash") +
@@ -261,7 +264,7 @@ namespace Dlss5Launcher
         {
             return s.Start.ToString("yyyy-MM-dd HH:mm") + "  " + Hours(s.Minutes).PadLeft(7) + "  " + (s.Samples > 0 ? ("NR " + N(s.Avg) + " ms").PadRight(12) : "pas de mesure").PadRight(12) +
                    (string.IsNullOrEmpty(s.Step) ? "" : "  [" + s.Step + "]") +
-                   (s.Samples > 0 ? "  Preset " + s.PresetText + (string.IsNullOrEmpty(s.Model) ? "" : " " + s.Model) : "") + "  " + s.Method + (s.Crashed ? "  ← " + s.Crash : "") +
+                   (s.Samples > 0 ? "  Preset " + s.PresetText + (string.IsNullOrEmpty(s.Model) ? "" : " " + s.Model) : "") + "  " + s.MethodText + (s.Crashed ? "  ← " + s.Crash : "") +
                    (s.Samples >= 8 && s.Drift >= 0.2 ? "  (NR +" + (s.Drift * 100).ToString("0", Fr) + " % en fin de partie)" : "") +
                    (string.IsNullOrEmpty(s.Note) ? "" : "  — " + s.Note);
         }

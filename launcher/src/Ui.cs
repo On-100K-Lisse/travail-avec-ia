@@ -91,14 +91,16 @@ namespace Dlss5Launcher
         CheckBox chkAntiCheat;
         bool blockAntiCheat;                         // launcher-config.ini : bloquerAntiCheat=1 (d'office dans la copie pour un ami)
         List<PItem> payloadItems;
-        ComboBox cbMode, cbProxy, cbPreset, cbStep;
+        ComboBox cbMode, cbProxy, cbPreset, cbStep, cbOpti;
+        List<string> optiFolders = new List<string>();
+        bool optiGuard;
         NrSettings defaults = new NrSettings();    // réglages par défaut (jeux sans profil)
         string defaultPresetName = Presets.Names[0], presetName = Presets.Names[0];
         Label lblProfile;
         Button bImport, bMakeDefault, bResetProfile;
         static string ProfilesDir { get { return Path.Combine(AppPaths.Root, "profils"); } }
         static string ProfilePath(Game g) { return Path.Combine(ProfilesDir, Installer.Safe(g.Name) + ".ini"); }
-        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo, bHistory, bManual;
+        Button bInstall, bReset, bLaunch, bFolder, bLog, bReport, bScan, bAdd, bApply, bJournaux, bUndo, bHistory, bManual, bAdvice;
         Panel pageJeu, pageReglages, pageJournal;
         Button tabJeu, tabReglages, tabJournal;
         ProgressBar progress;
@@ -129,10 +131,17 @@ namespace Dlss5Launcher
                 Log.W("Launcher démarré — " + gpuText + (IsAdmin() ? " — mode administrateur" : ""));
                 if (old) Log.W("ATTENTION : pilote NVIDIA plus vieux que 616.56 (minimum demandé par OptiScaler F5).");
                 CheckPayloadAtStart();
+                FillOpti();
                 list.Focus();
                 StartScan();
             };
-            FormClosing += (s, e) => SaveConfig();
+            FormClosing += (s, e) =>
+            {
+                if (watchGame != null && e.CloseReason == CloseReason.UserClosing &&
+                    Ask("Une partie de " + watchGame.Name + " est surveillée.\n\nSi tu fermes le launcher, elle sera quand même notée au prochain démarrage (si OptiScaler a écrit son log), mais la fiche automatique en cas de crash ne sera pas faite.\n\nFermer quand même ?", MessageBoxIcon.Question) != DialogResult.Yes)
+                { e.Cancel = true; return; }
+                SaveConfig();
+            };
         }
 
         // =============================================================== en-tête
@@ -191,7 +200,7 @@ namespace Dlss5Launcher
             list.SelectedIndexChanged += (s, e) =>
             {
                 var ns = list.SelectedItems.Count > 0 ? (Game)list.SelectedItems[0].Tag : null;
-                if (ns != selected) { CommitStep(); selected = ns; LoadProfile(selected); LoadStep(); }
+                if (ns != selected) { CommitStep(); selected = ns; LoadProfile(selected); LoadStep(); LoadOpti(); }
                 ShowGame();
             };
             list.DoubleClick += (s, e) => { if (selected != null) OpenFolder(); };
@@ -272,8 +281,16 @@ namespace Dlss5Launcher
             cbStep.SelectionChangeCommitted += (s, e) => { if (cbStep.SelectedItem != null) cbStep.Text = (string)cbStep.SelectedItem; CommitStep(); };
             cbStep.Leave += (s, e) => CommitStep();
             cbStep.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { CommitStep(); e.SuppressKeyPress = true; } };
-            opts.Controls.Add(new Label { Text = "Étape de test :", AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 6, 10, 6) }, 0, 2);
-            opts.Controls.Add(cbStep, 1, 2);
+            cbOpti = new SafeCombo { DropDownStyle = ComboBoxStyle.DropDownList, Width = 300, FlatStyle = FlatStyle.Flat };
+            Theme.Dark(cbOpti);
+            tips.SetToolTip(cbOpti, "Version d'OptiScaler F5 pour ce jeu (OptiScaler F5 et Feeder F5Low).\n" +
+                "Ajoute une version en copiant son zip dans payload\\optiscaler-f5-<version> (ex. optiscaler-f5-0.1.34).\n" +
+                "La 0.1.32 reste la version testée. Le choix compte à la prochaine installation :\nsi le jeu est déjà installé, réinitialise puis réinstalle.");
+            cbOpti.SelectedIndexChanged += (s, e) => OptiChanged();
+            opts.Controls.Add(new Label { Text = "OptiScaler :", AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 6, 10, 6) }, 0, 2);
+            opts.Controls.Add(cbOpti, 1, 2);
+            opts.Controls.Add(new Label { Text = "Étape de test :", AutoSize = true, ForeColor = Theme.Text, Margin = new Padding(0, 6, 10, 6) }, 0, 3);
+            opts.Controls.Add(cbStep, 1, 3);
 
             var row1 = new FlowLayoutPanel { AutoSize = true, WrapContents = false, BackColor = Theme.Panel, Margin = new Padding(0) };
             bInstall = Theme.Btn("⚡  Installer DLSS 5", Theme.Green, 230, 46);
@@ -295,7 +312,10 @@ namespace Dlss5Launcher
             tips.SetToolTip(bHistory, "Toutes tes parties de ce jeu : durée, coût NR, preset, DLL, crash.\nCompare les montages entre eux (ex. Preset A contre Preset B).\nFichier complet : historique.csv (s'ouvre dans Excel).");
             bManual = Theme.Btn("✎  Partie à la main", Theme.Line, 150); bManual.Click += (s, e) => DoManualSession(selected);
             tips.SetToolTip(bManual, "Note une partie que le launcher ne peut pas lire lui-même :\nune étape « vanille » (sans DLSS 5), ou RenoDX / Feeder ReShade.\nDurée, crash ou non, et une note.");
-            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bHistory, bManual, bJournaux, bUndo });
+            bAdvice = Theme.Btn("🩺  Conseils", Theme.Green, 150); bAdvice.Click += (s, e) => ShowAdvice(selected);
+            tips.SetToolTip(bAdvice, "Ce que la dernière partie conseille (profondeur jamais trouvée, crash GPU, NR trop lourd…),\n" +
+                "à appliquer en un clic au profil de ce jeu — et au jeu s'il est installé.");
+            row2.Controls.AddRange(new Control[] { bLaunch, bFolder, bLog, bReport, bAdvice, bHistory, bManual, bJournaux, bUndo });
             tips.SetToolTip(bReport, "Crée une fiche Markdown (jeu, mode, hashes, réglages, extrait du log)\ndans le dossier fiches-de-test — pratique pour ta documentation.");
             tips.SetToolTip(bReset, "Remet le dossier du jeu exactement comme avant l'installation,\nd'après le manifeste. Les logs sont archivés avant.");
 
@@ -600,6 +620,7 @@ namespace Dlss5Launcher
                     found.AddRange(Scanner.Steam());
                     found.AddRange(Scanner.Epic());
                     found.AddRange(Scanner.Gog());
+                    found.AddRange(Scanner.Xbox());
                     foreach (var f in customFolders) if (Directory.Exists(f)) found.Add(Scanner.Manual(f));
                     found = found.GroupBy(x => x.Root.TrimEnd(new[] { '\\', '/' }).ToLowerInvariant()).Select(x => x.First()).ToList();
                     for (int i = 0; i < found.Count; i++)
@@ -659,6 +680,9 @@ namespace Dlss5Launcher
             if (bHistory != null) bHistory.Enabled = true;
             if (cbStep != null) cbStep.Enabled = has;
             if (bManual != null) bManual.Enabled = has && !busy;
+            if (bAdvice != null) bAdvice.Enabled = has && !busy;
+            if (cbOpti != null) cbOpti.Enabled = has && optiFolders.Count > 1;
+            if (bLaunch != null && has) bLaunch.Text = watchGame == g ? "◉  Partie surveillée" : g.Store == "Xbox" ? "▶  Surveiller la partie" : "▶  Lancer le jeu";
             if (!has)
             {
                 lblGame.Text = "Choisis un jeu dans la liste"; lblStatus.Text = ""; lblNote.Text = "";
@@ -682,7 +706,12 @@ namespace Dlss5Launcher
             if (g.TakenProxyNames.Count > 0) lines.Add("DLL d'autres mods à ne pas toucher : " + string.Join(", ", g.TakenProxyNames));
             if (g.OneClickInstalled) lines.Add("Installation 1-Click DLSS5 détectée : « Réinitialiser » la défait d'après son manifeste.");
             if (g.CleanPlan.Count > 0) lines.Add("Traces d'autres mods/launchers : " + g.CleanPlan.Count + " élément(s) — « Réinitialiser » peut les nettoyer.");
-            if (g.Installed != null) lines.Add("Installé : " + g.Installed.ModeLabel + " via " + g.Installed.Proxy + " le " + g.Installed.Date + (g.Installed.Complete ? "" : "  (INCOMPLET — réinitialise)"));
+            if (g.Installed != null) lines.Add("Installé : " + g.Installed.ModeLabel + " via " + g.Installed.Proxy + " le " + g.Installed.Date + (g.Installed.Complete ? "" : "  (INCOMPLET — réinitialise)") +
+                                               (g.Installed.UsesOptiIni ? "  —  OptiScaler " + OptiVersions.Version(string.IsNullOrEmpty(g.Installed.Opti) ? OptiVersions.Default : g.Installed.Opti) : ""));
+            string chosenOpti = optiFolders.Count > 1 ? OptiVersions.For(g.Name) : OptiVersions.Default;
+            if (chosenOpti != OptiVersions.Default && (g.Installed == null || g.Installed.Opti != chosenOpti))
+                lines.Add("OptiScaler choisi pour ce jeu : " + OptiVersions.Label(chosenOpti) + (g.Installed != null ? "  → réinitialise puis réinstalle pour l'utiliser" : ""));
+            if (watchGame == g) lines.Add("Partie surveillée : elle sera notée (et la fiche faite en cas de crash) quand le jeu se fermera.");
             details.Text = string.Join("\r\n", lines);
             try
             {
@@ -729,7 +758,7 @@ namespace Dlss5Launcher
                       "Si c'est un jeu solo joué hors ligne et que tu acceptes ce risque, décoche « Bloquer l'installation dans les jeux avec anti-cheat » (sous les boutons).");
                 return;
             }
-            if (!PayloadOkFor(eff)) return;
+            if (!PayloadOkFor(eff, g)) return;
             if (g.AntiCheat.Count > 0 &&
                 Ask("Ce jeu contient un anti-cheat (" + string.Join(", ", g.AntiCheat) + ").\n\nInjecter une DLL peut mener à un BANNISSEMENT dans un jeu en ligne.\nContinue seulement pour un jeu solo joué hors ligne (ou avec l'anti-cheat désactivé).\n\nInstaller quand même ?", MessageBoxIcon.Warning) != DialogResult.Yes) return;
             if (g.Status == GameStatus.PeuProbable &&
@@ -963,14 +992,217 @@ namespace Dlss5Launcher
         void LaunchGame()
         {
             var g = selected; if (g == null) return;
+            if (watchGame == g) { Info("La partie de " + g.Name + " est déjà surveillée."); return; }
+            if (watchGame != null && Ask("Une partie de " + watchGame.Name + " est déjà surveillée. Arrêter de la surveiller pour " + g.Name + " ?", MessageBoxIcon.Question) != DialogResult.Yes) return;
+            CommitStep();
             History.RecordLive(g);   // le prochain lancement écrase OptiScaler.log : on note la partie d'avant
+            if (g.Store == "Xbox")
+                Info("Lance " + g.Name + " depuis l'app Xbox (le lancer directement contournerait sa licence).\n\nLe launcher surveille : dès que le jeu démarre, puis quand il se ferme, la partie sera notée.");
+            else
+                try
+                {
+                    if (g.Store == "Steam" && g.AppId != null) Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true });
+                    else Process.Start(new ProcessStartInfo(g.ExePath) { WorkingDirectory = g.ExeDir, UseShellExecute = true });
+                    Log.W("Lancement de " + g.Name);
+                }
+                catch (Exception ex) { Error("Lancement impossible : " + ex.Message); return; }
+            StartWatch(g);
+        }
+
+        // =============================================================== surveillance de la partie
+        Game watchGame; Process watchProc; DateTime watchAsked, watchStart; bool watchExited; DateTime watchExitAt;
+        System.Windows.Forms.Timer watchTimer;
+
+        void StartWatch(Game g)
+        {
+            watchGame = g; watchProc = null; watchAsked = DateTime.Now; watchExited = false;
+            if (watchTimer == null) { watchTimer = new System.Windows.Forms.Timer { Interval = 3000 }; watchTimer.Tick += (s, e) => WatchTick(); }
+            watchTimer.Start();
+            Log.W("Surveillance de " + g.Name + " : en attente du démarrage du jeu (" + g.ExeName + ").");
+            lblFooter.Text = "En attente du démarrage de " + g.Name + "…";
+            ShowGame();
+        }
+
+        void StopWatch() { if (watchTimer != null) watchTimer.Stop(); watchGame = null; watchProc = null; ShowGame(); }
+
+        void WatchTick()
+        {
+            var g = watchGame; if (g == null) { watchTimer.Stop(); return; }
             try
             {
-                if (g.Store == "Steam" && g.AppId != null) Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true });
-                else Process.Start(new ProcessStartInfo(g.ExePath) { WorkingDirectory = g.ExeDir, UseShellExecute = true });
-                Log.W("Lancement de " + g.Name);
+                if (watchProc == null)
+                {
+                    watchProc = FindGameProcess(g);
+                    if (watchProc != null)
+                    {
+                        try { watchStart = watchProc.StartTime; } catch { watchStart = DateTime.Now; }
+                        Log.W("Surveillance : " + g.Name + " a démarré à " + watchStart.ToString("HH:mm:ss") + ".");
+                    }
+                    else if ((DateTime.Now - watchAsked).TotalMinutes > 10)
+                    {
+                        Log.W("Surveillance : " + g.Name + " n'a pas démarré en 10 minutes, j'arrête de surveiller.");
+                        lblFooter.Text = "Surveillance arrêtée : " + g.Name + " n'a pas démarré."; StopWatch();
+                    }
+                    return;
+                }
+                if (!watchExited)
+                {
+                    bool exited; try { exited = watchProc.HasExited; } catch { exited = FindGameProcess(g) == null; }
+                    if (!exited) { if (!busy) lblFooter.Text = "Partie en cours : " + g.Name + " — " + History.Hours((DateTime.Now - watchStart).TotalMinutes) + " (surveillée)"; return; }
+                    watchExited = true; watchExitAt = DateTime.Now;   // on laisse quelques secondes au log pour finir de s'écrire
+                    return;
+                }
+                if ((DateTime.Now - watchExitAt).TotalSeconds < 12)
+                {   // certains jeux se relancent eux-mêmes (lanceur, anti-triche) : si un nouveau processus apparaît, on continue
+                    var again = FindGameProcess(g);
+                    if (again != null) { watchProc = again; watchExited = false; Log.W("Surveillance : " + g.Name + " s'est relancé, je continue."); }
+                    return;
+                }
+                watchTimer.Stop();
+                int code = int.MinValue; try { code = watchProc.ExitCode; } catch { }
+                DateTime start = watchStart, end = watchExitAt;
+                watchGame = null; watchProc = null;
+                OnGameClosed(g, start, end, code);
             }
-            catch (Exception ex) { Error("Lancement impossible : " + ex.Message); }
+            catch (Exception ex) { Log.W("Surveillance : " + ex.Message); StopWatch(); }
+        }
+
+        static Process FindGameProcess(Game g)
+        {
+            if (g.ExePath == null) return null;
+            foreach (var p in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(g.ExePath)))
+            {
+                try { if (!string.Equals(p.MainModule.FileName, g.ExePath, StringComparison.OrdinalIgnoreCase)) continue; } catch { }
+                return p;
+            }
+            return null;
+        }
+
+        void OnGameClosed(Game g, DateTime start, DateTime end, int code)
+        {
+            double minutes = (end - start).TotalMinutes;
+            Log.W("Surveillance : " + g.Name + " fermé après " + History.Hours(minutes) + (code != int.MinValue ? " (code de sortie " + code + ")" : "") + ".");
+            try { Scanner.Analyze(g); } catch { }
+            string log = g.ExeDir == null ? null : Path.Combine(g.ExeDir, "OptiScaler.log");
+            bool fresh = log != null && File.Exists(log) && File.GetLastWriteTime(log) >= start.AddMinutes(-1);
+            if (fresh)
+            {
+                var s = History.RecordLive(g);
+                if (s != null && s.Crashed)
+                {
+                    string fiche = null; try { fiche = Report.Write(g, gpuText); } catch (Exception ex) { Log.W("Fiche automatique impossible : " + ex.Message); }
+                    ShowGame(); FlashAndFront();
+                    Info("Crash détecté dans " + g.Name + " : " + s.Crash + ", après " + History.Hours(s.Minutes) + " de jeu.\n\n" +
+                         (fiche != null ? "Fiche de test créée automatiquement : " + Path.GetFileName(fiche) + "\n\n" : "") +
+                         "Tu peux réinitialiser le jeu tout de suite : rien ne sera perdu. « 🩺 Conseils » dit quoi changer.");
+                }
+                else lblFooter.Text = "Partie notée : " + g.Name + ", " + History.Hours(minutes) + (s != null && s.Samples > 0 ? ", NR ≈ " + s.Avg.ToString("0.0", CultureInfo.GetCultureInfo("fr-CA")) + " ms" : "") + ", aucun crash détecté.";
+            }
+            else
+            {
+                // pas de log OptiScaler pour cette partie (vanille, RenoDX, Feeder ReShade) : on demande
+                string step = Steps.Current(g.Name);
+                FlashAndFront();
+                var ans = MessageBox.Show(this, g.Name + " s'est fermé après " + History.Hours(minutes) + (step != "" ? " (étape « " + step + " »)" : "") + ".\n\n" +
+                    "Le launcher ne peut pas lire cette partie lui-même" + (g.Installed == null ? " (aucun mod installé)" : "") + ".\n\nLe jeu a-t-il planté ?\n\n" +
+                    "Oui = crash, Non = tout s'est bien passé, Annuler = ne pas noter la partie.",
+                    "DLSS 5 Launcher", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                lblFooter.Text = ans == DialogResult.Cancel ? "Partie de " + g.Name + " non notée." : "Partie notée : " + g.Name + ", " + History.Hours(minutes) + (ans == DialogResult.Yes ? ", crash." : ", aucun crash.");
+                if (ans != DialogResult.Cancel)
+                    History.RecordManual(g.Name, start, Math.Max(1, Math.Round(minutes)), ans == DialogResult.Yes ? "crash (signalé à la fermeture)" : History.NoCrash, step,
+                                         "durée mesurée par le launcher" + (g.Installed == null ? ", jeu sans DLSS 5" : "") + (code != int.MinValue && code != 0 ? ", code de sortie " + code : ""));
+            }
+            ShowGame();
+        }
+
+        [DllImport("user32.dll")] static extern bool FlashWindow(IntPtr hwnd, bool invert);
+        void FlashAndFront()
+        {
+            try { if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal; Activate(); FlashWindow(Handle, true); } catch { }
+        }
+
+        // =============================================================== versions d'OptiScaler
+        void FillOpti()
+        {
+            optiFolders = OptiVersions.Folders();
+            optiGuard = true;
+            cbOpti.Items.Clear();
+            foreach (var f in optiFolders) cbOpti.Items.Add(OptiVersions.Label(f));
+            if (optiFolders.Count == 0) cbOpti.Items.Add("(aucune dans payload\\)");
+            optiGuard = false;
+            LoadOpti();
+        }
+        void LoadOpti()
+        {
+            if (cbOpti == null) return;
+            if (optiFolders.Count == 0) { optiGuard = true; cbOpti.SelectedIndex = 0; optiGuard = false; return; }
+            string f = selected == null ? OptiVersions.Default : OptiVersions.For(selected.Name);
+            int i = Math.Max(0, optiFolders.IndexOf(f));
+            optiGuard = true; cbOpti.SelectedIndex = i; optiGuard = false;
+        }
+        void OptiChanged()
+        {
+            if (optiGuard || selected == null || cbOpti.SelectedIndex < 0 || cbOpti.SelectedIndex >= optiFolders.Count) return;
+            string f = optiFolders[cbOpti.SelectedIndex];
+            if (f == OptiVersions.For(selected.Name)) return;
+            try { OptiVersions.Set(selected.Name, f); } catch (Exception ex) { Error(ex.Message); return; }
+            if (selected.Installed != null && selected.Installed.UsesOptiIni && selected.Installed.Opti != f)
+                Info("C'est noté pour " + selected.Name + ". La version installée reste en place : réinitialise puis réinstalle pour passer à " + OptiVersions.Label(f) + ".");
+            ShowGame();
+        }
+
+        // =============================================================== conseils
+        void ShowAdvice(Game g)
+        {
+            if (g == null) return;
+            List<Fix> fixes;
+            try { fixes = Report.Fixes(g, settings); } catch (Exception ex) { Error("Lecture des logs impossible : " + ex.Message); return; }
+            if (fixes.Count == 0) { Info("Rien à conseiller pour " + g.Name + " d'après sa dernière partie (log d'OptiScaler, ou le dernier journal archivé)."); return; }
+            var f = new Form { Text = "Conseils — " + g.Name, Width = 760, Height = 470, StartPosition = FormStartPosition.CenterParent, BackColor = Theme.Panel, ForeColor = Theme.Text, Font = Theme.UI, FormBorderStyle = FormBorderStyle.FixedDialog, MinimizeBox = false, MaximizeBox = false, ShowIcon = false };
+            var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Padding = new Padding(16), BackColor = Theme.Panel };
+            flow.Controls.Add(new Label { Text = "D'après la dernière partie. Les cases cochées changent le profil de ce jeu" + (g.Installed != null && g.Installed.Complete ? ", puis le jeu installé." : " (prochaine installation)."), AutoSize = true, MaximumSize = new Size(700, 0), ForeColor = Theme.Dim, Margin = new Padding(0, 0, 0, 10) });
+            var boxes = new List<KeyValuePair<CheckBox, Fix>>();
+            foreach (var x in fixes)
+            {
+                if (x.Apply != null)
+                {
+                    var cb = new CheckBox { Text = x.Text, Checked = true, AutoSize = true, ForeColor = Theme.Text, Font = Theme.UIBold, Margin = new Padding(0, 4, 0, 0) };
+                    flow.Controls.Add(cb); boxes.Add(new KeyValuePair<CheckBox, Fix>(cb, x));
+                }
+                else flow.Controls.Add(new Label { Text = "• " + x.Text, AutoSize = true, ForeColor = Theme.Yellow, Font = Theme.UIBold, Margin = new Padding(0, 6, 0, 0) });
+                flow.Controls.Add(new Label { Text = x.Why, AutoSize = true, MaximumSize = new Size(690, 0), ForeColor = Theme.Dim, Margin = new Padding(20, 0, 0, 6) });
+            }
+            var chkStep = new CheckBox { AutoSize = true, Checked = true, ForeColor = Theme.Text, Margin = new Padding(0, 12, 0, 0) };
+            flow.Controls.Add(chkStep);
+            Action upd = () =>
+            {
+                var sel = boxes.Where(b => b.Key.Checked).Select(b => b.Value.Short).ToList();
+                chkStep.Text = "Ranger les prochaines parties sous l'étape « après : " + (sel.Count == 0 ? "…" : string.Join(", ", sel)) + " »";
+                chkStep.Enabled = sel.Count > 0;
+            };
+            foreach (var b in boxes) b.Key.CheckedChanged += (s, e) => upd();
+            upd();
+            var bar = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 52, BackColor = Theme.Panel, Padding = new Padding(16, 6, 10, 0) };
+            var bOk = Theme.Btn("Appliquer", Theme.Green, 140); var bNo = Theme.Btn("Fermer", Theme.Line, 110);
+            bOk.Enabled = boxes.Count > 0;
+            bar.Controls.AddRange(new Control[] { bOk, bNo });
+            f.Controls.Add(flow); f.Controls.Add(bar);
+            bNo.Click += (s, e) => f.Close();
+            bOk.Click += (s, e) =>
+            {
+                var chosen = boxes.Where(b => b.Key.Checked).Select(b => b.Value).ToList();
+                if (chosen.Count == 0) return;
+                foreach (var x in chosen) x.Apply(settings);
+                presetName = "Personnalisé"; SelectPresetName(presetName);
+                SaveCurrent(); RefreshControls();
+                if (chkStep.Checked) Steps.Set(g.Name, "après : " + string.Join(", ", chosen.Select(x => x.Short)));
+                LoadStep();
+                Log.W("Conseils appliqués à " + g.Name + " : " + string.Join(" ; ", chosen.Select(x => x.Text)));
+                f.Close();
+                if (g.Installed != null && g.Installed.Complete) DoApply();
+                else Info("Profil de " + g.Name + " mis à jour. Ces réglages seront utilisés à la prochaine installation.");
+            };
+            f.ShowDialog(this);
         }
         void OpenFolder()
         {
@@ -1145,7 +1377,7 @@ namespace Dlss5Launcher
             f.Controls.Add(box); f.Controls.Add(bar);
             Action fill = () => box.Text = payloadItems == null ? "Vérification en cours…" : PayloadDoctor.Report(payloadItems, false).Replace("\n", "\r\n").Replace("\r\r", "\r");
             fill();
-            bAgain.Click += (s, e) => { box.Text = "Vérification en cours (calcul des SHA-256)…"; bAgain.Enabled = false; RunDoctor(true, () => { if (!f.IsDisposed) { fill(); box.SelectionLength = 0; bAgain.Enabled = true; } }); };
+            bAgain.Click += (s, e) => { box.Text = "Vérification en cours (calcul des SHA-256)…"; bAgain.Enabled = false; RunDoctor(true, () => { FillOpti(); if (!f.IsDisposed) { fill(); box.SelectionLength = 0; bAgain.Enabled = true; } }); };
             bCopy.Click += (s, e) => { try { Clipboard.SetText(box.Text); bCopy.Text = "Copié ✓"; } catch { } };
             bOpen.Click += (s, e) => { try { Process.Start("explorer.exe", "\"" + AppPaths.Payload + "\""); } catch { } };
             bClose.Click += (s, e) => f.Close();
@@ -1155,10 +1387,16 @@ namespace Dlss5Launcher
         }
 
         // Avant une installation : un fichier manquant ou abîmé bloque, une autre version demande confirmation.
-        bool PayloadOkFor(InstallMode mode)
+        bool PayloadOkFor(InstallMode mode, Game g)
         {
             List<PItem> pb;
-            try { pb = PayloadDoctor.ProblemsFor(mode); } catch (Exception ex) { Log.W("Docteur payload : " + ex.Message); return true; }
+            string of = OptiVersions.For(g.Name);
+            bool usesOpti = mode == InstallMode.OptiScaler || mode == InstallMode.Feeder;
+            try { pb = PayloadDoctor.ProblemsFor(mode, usesOpti ? of : OptiVersions.Default); } catch (Exception ex) { Log.W("Docteur payload : " + ex.Message); return true; }
+            if (pb.Count == 0 && usesOpti && of != OptiVersions.Default)
+                return Ask("Ce jeu utilisera " + OptiVersions.Label(of) + ", pas la 0.1.32 testée avec le launcher.\n\n" +
+                           "Les réglages du launcher restent les mêmes (vérifié sur ses sections [DlssNr]), mais le reste n'a pas encore été validé.\n" +
+                           "Astuce : mets une étape de test (ex. « OptiScaler " + OptiVersions.Version(of) + " ») pour comparer avec la 0.1.32.\n\nInstaller avec cette version ?", MessageBoxIcon.Question) == DialogResult.Yes;
             if (pb.Count == 0) return true;
             string list = string.Join("\n", pb.Select(x => "  " + x.StateText + " : " + x.Rel + (x.Detail != null ? "\n      " + x.Detail : "")));
             if (pb.Any(x => x.Blocking))

@@ -316,7 +316,7 @@ namespace Dlss5Launcher
 
     public class Manifest
     {
-        public string Mode = "", Proxy = "", Date = "", Exe = "", GpuMode = "", Card = "";
+        public string Mode = "", Proxy = "", Date = "", Exe = "", GpuMode = "", Card = "", Opti = "";
         public bool Complete;
         public List<ManEntry> Entries = new List<ManEntry>();
         public string ModeLabel
@@ -346,7 +346,7 @@ namespace Dlss5Launcher
             var sb = new StringBuilder();
             sb.AppendLine("#DLSS5-Launcher manifest v1 — ne pas modifier à la main");
             sb.AppendLine("MODE\t" + Mode); sb.AppendLine("PROXY\t" + Proxy); sb.AppendLine("DATE\t" + Date);
-            sb.AppendLine("EXE\t" + Exe); sb.AppendLine("GPU\t" + GpuMode); sb.AppendLine("CARTE\t" + Card); sb.AppendLine("COMPLETE\t" + (Complete ? "1" : "0"));
+            sb.AppendLine("EXE\t" + Exe); sb.AppendLine("GPU\t" + GpuMode); sb.AppendLine("CARTE\t" + Card); sb.AppendLine("OPTI\t" + Opti); sb.AppendLine("COMPLETE\t" + (Complete ? "1" : "0"));
             foreach (var e in Entries) sb.AppendLine("E\t" + e.Kind + "\t" + e.Rel + "\t" + e.Sha + "\t" + e.OrigSha);
             string tmp = FileOf(exeDir) + ".tmp";
             File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(false));
@@ -371,6 +371,7 @@ namespace Dlss5Launcher
                     case "EXE": m.Exe = p[1]; break;
                     case "GPU": m.GpuMode = p[1]; break;
                     case "CARTE": m.Card = p[1]; break;
+                    case "OPTI": m.Opti = p[1]; break;
                     case "COMPLETE": m.Complete = p[1] == "1"; break;
                     case "E": m.Entries.Add(new ManEntry { Kind = p[1], Rel = p.Length > 2 ? p[2] : "", Sha = p.Length > 3 ? p[3] : "", OrigSha = p.Length > 4 ? p[4] : "" }); break;
                 }
@@ -444,7 +445,8 @@ namespace Dlss5Launcher
             throw new UserFacingException("Tous les noms de DLL proxy sont déjà pris par d'autres mods dans ce dossier.");
         }
 
-        public static void CheckPayload(InstallMode mode)
+        public static void CheckPayload(InstallMode mode) { CheckPayload(mode, AppPaths.OptiDir); }
+        public static void CheckPayload(InstallMode mode, string optiDir)
         {
             if (Gpu.IsAmdMode && (mode == InstallMode.RenoDX || mode == InstallMode.FeederReShade))
                 throw new UserFacingException("RenoDX et le Feeder ReShade passent par le cœur NGX de NVIDIA : impossible sur une carte " + Gpu.Vendor + ".\nUtilise OptiScaler F5 (jeux avec FSR/XeSS/DLSS) ou le Feeder F5Low (jeux sans upscaler).");
@@ -452,8 +454,8 @@ namespace Dlss5Launcher
             if (Gpu.IsAmdMode)
                 need.AddRange(new[] { Path.Combine(AppPaths.AmdDir, "nvngx.dll_dlssnr.dll"), Path.Combine(AppPaths.AmdDir, "nr_port.ini") });
             if (mode == InstallMode.OptiScaler || mode == InstallMode.Feeder)
-                need.AddRange(new[] { Path.Combine(AppPaths.OptiDir, "OptiScaler.dll"), Path.Combine(AppPaths.OptiDir, "OptiScaler.ini"),
-                                      Path.Combine(AppPaths.OptiDir, "nvngx.dll_dlssnr.dll"), Path.Combine(AppPaths.OptiDir, "OptiScaler") });
+                need.AddRange(new[] { Path.Combine(optiDir, "OptiScaler.dll"), Path.Combine(optiDir, "OptiScaler.ini"),
+                                      Path.Combine(optiDir, "nvngx.dll_dlssnr.dll"), Path.Combine(optiDir, "OptiScaler") });
             else
                 need.AddRange(new[] { Path.Combine(AppPaths.RenoDir, "dxgi.dll"), Path.Combine(AppPaths.RenoDir, "renodx-dlss5.addon64"), Path.Combine(AppPaths.RenoDir, "ReShade.ini") });
             if (mode == InstallMode.FeederReShade)
@@ -547,7 +549,8 @@ namespace Dlss5Launcher
             if (g.OneClickInstalled) throw new UserFacingException("Ce jeu a une installation du 1-Click DLSS5.\nClique d'abord « Réinitialiser le jeu » : il sait maintenant la défaire, puis réinstalle.");
             if (IsGameRunning(g)) throw new UserFacingException("Le jeu roule encore. Ferme-le complètement, puis réessaie.");
             var mode = Resolve(g, wanted);
-            CheckPayload(mode);
+            string optiFolder = OptiVersions.For(g.Name), optiDir = OptiVersions.Dir(optiFolder);   // version d'OptiScaler choisie pour ce jeu
+            CheckPayload(mode, optiDir);
             st = Stability.Adjust(st, g);
             if (mode == InstallMode.RenoDX && g.TakenProxyNames.Contains("dxgi.dll", StringComparer.OrdinalIgnoreCase))
                 throw new UserFacingException("Un dxgi.dll inconnu (autre mod) existe déjà : le mode RenoDX en a besoin. Essaie le mode OptiScaler F5.");
@@ -566,7 +569,7 @@ namespace Dlss5Launcher
             File.WriteAllText(probe, "ok"); File.Delete(probe);
 
             string modeId = mode == InstallMode.OptiScaler ? "OPTISCALER" : mode == InstallMode.RenoDX ? "RENODX" : mode == InstallMode.Feeder ? "FEEDER" : "FEEDER_RESHADE";
-            m = new Manifest { GpuMode = (Gpu.IsAmdMode ? Gpu.Vendor + " (port vendor-neutral)" : "NVIDIA" + (Gpu.Series > 0 ? " RTX " + Gpu.Series : "") + " (NGX)") + ", NR " + Gpu.NrLabel, Card = Gpu.Name ?? "", Mode = modeId, Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Exe = g.ExeName };
+            m = new Manifest { GpuMode = (Gpu.IsAmdMode ? Gpu.Vendor + " (port vendor-neutral)" : "NVIDIA" + (Gpu.Series > 0 ? " RTX " + Gpu.Series : "") + " (NGX)") + ", NR " + Gpu.NrLabel, Card = Gpu.Name ?? "", Opti = mode == InstallMode.OptiScaler || mode == InstallMode.Feeder ? optiFolder : "", Mode = modeId, Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), Exe = g.ExeName };
             m.Save(exeDir);
             Log.W("Installation " + m.ModeLabel + " dans " + exeDir + "  [API " + g.ApiText + (g.Engine != null ? ", " + g.Engine : "") + ", upscalers : " + g.UpscalerText + (wanted == InstallMode.Auto ? ", choix auto" : ", choix manuel") + "]");
 
@@ -578,15 +581,16 @@ namespace Dlss5Launcher
             {
                 string proxy = PickProxy(g, proxyOverride);
                 m.Proxy = proxy; m.Save(exeDir);
-                CopyIn(Path.Combine(AppPaths.OptiDir, "OptiScaler.dll"), proxy);
+                CopyIn(Path.Combine(optiDir, "OptiScaler.dll"), proxy);
+                if (optiFolder != OptiVersions.Default) Log.W("  OptiScaler : " + OptiVersions.Label(optiFolder));
                 if (Gpu.IsAmdMode)
                 {   // forwarder vendor-neutral : fait tourner le modèle en D3D12 + DirectML, sans NGX
                     CopyIn(Path.Combine(AppPaths.AmdDir, "nvngx.dll_dlssnr.dll"), "nvngx.dll_dlssnr.dll");
                     CopyIn(Path.Combine(AppPaths.AmdDir, "nr_port.ini"), "nr_port.ini");
                 }
-                else CopyIn(Path.Combine(AppPaths.OptiDir, "nvngx.dll_dlssnr.dll"), "nvngx.dll_dlssnr.dll");
-                CopyDirIn(Path.Combine(AppPaths.OptiDir, "OptiScaler"), "OptiScaler");
-                string tpl = Ini.ReadFile(Path.Combine(AppPaths.OptiDir, "OptiScaler.ini"));
+                else CopyIn(Path.Combine(optiDir, "nvngx.dll_dlssnr.dll"), "nvngx.dll_dlssnr.dll");
+                CopyDirIn(Path.Combine(optiDir, "OptiScaler"), "OptiScaler");
+                string tpl = Ini.ReadFile(Path.Combine(optiDir, "OptiScaler.ini"));
                 WriteIn("OptiScaler.ini", mode == InstallMode.Feeder ? st.BuildFeederIni(tpl, g) : st.BuildOptiIni(tpl, exeDir));
             }
             else if (mode == InstallMode.FeederReShade)
@@ -623,8 +627,10 @@ namespace Dlss5Launcher
             st = Stability.Adjust(st, g);
             if (m.UsesOptiIni)
             {
-                // on repart du modèle propre : un ancien choix (ex. FinishedPicture) ne doit pas traîner
-                string tpl = Ini.ReadFile(Path.Combine(AppPaths.OptiDir, "OptiScaler.ini"));
+                // on repart du modèle propre (celui de la version installée) : un ancien choix ne doit pas traîner
+                string od = OptiVersions.Dir(string.IsNullOrEmpty(m.Opti) ? OptiVersions.Default : m.Opti);
+                if (!File.Exists(Path.Combine(od, "OptiScaler.ini"))) od = AppPaths.OptiDir;
+                string tpl = Ini.ReadFile(Path.Combine(od, "OptiScaler.ini"));
                 WriteIn("OptiScaler.ini", m.Mode == "FEEDER" ? st.BuildFeederIni(tpl, g) : st.BuildOptiIni(tpl, exeDir));
             }
             else if (m.Mode == "FEEDER_RESHADE")
@@ -780,6 +786,12 @@ namespace Dlss5Launcher
     }
 
     // ------------------------------------------------------------------ performance mesurée (OptiScaler.log)
+    public class Fix
+    {
+        public string Id, Text, Why, Short;
+        public Action<NrSettings> Apply;      // null : conseil à suivre soi-même
+    }
+
     public class PerfInfo
     {
         public int Samples;
@@ -874,6 +886,61 @@ namespace Dlss5Launcher
             if (!File.Exists(p)) return null;
             using (var fs = new FileStream(p, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var rd = new StreamReader(fs)) return rd.ReadToEnd();
+        }
+
+        // Conseils qu'un clic peut appliquer au profil du jeu (bouton « Conseils »). Ils viennent des mêmes logs que le diagnostic.
+        public static List<Fix> Fixes(Game g, NrSettings cur)
+        {
+            var r = new List<Fix>();
+            string dir = g.ExeDir; var m = g.Installed;
+            if (m == null)
+            {
+                string a = LatestArchive(g);
+                if (a != null) { dir = a; m = Manifest.LoadFile(Path.Combine(a, "manifest.tsv")) ?? InferFromArchive(a); }
+            }
+            string os = dir == null ? null : ReadShared(Path.Combine(dir, "OptiScaler.log"));
+            bool feeder = m != null && m.Mode == "FEEDER";
+            var pf = dir == null ? new PerfInfo() : Perf.Read(dir);
+            string crash = os == null ? History.NoCrash : History.CrashType(os);
+            bool crashed = crash != History.NoCrash;
+            if (os != null && feeder && cur.FUseDepth)
+            {
+                int none = Regex.Matches(os, @"Depth finder: frame \d+.*none qualifies").Count, reports = Regex.Matches(os, @"Depth finder: frame \d+").Count;
+                bool noDepth = Regex.IsMatch(os, @"matched with depth 0\)") && !Regex.IsMatch(os, @"matched with depth [1-9]");
+                if (reports >= 10 && none * 10 >= reports * 9 && noDepth)
+                    r.Add(new Fix { Id = "profondeur", Short = "sans profondeur", Text = "Couper la recherche de profondeur",
+                        Why = "Elle n'a jamais trouvé la profondeur de ce jeu (" + none + "/" + reports + " rapports) mais surveillait tous les dessins : même image, moins de surcharge.",
+                        Apply = s => s.FUseDepth = false });
+            }
+            if (Stability.HasRr(g) && !cur.RrSafe && !Gpu.IsAmdMode)
+                r.Add(new Fix { Id = "rr", Short = "profil sûr RR", Text = "Réactiver le profil sûr Ray Reconstruction",
+                    Why = "Ce jeu a la Ray Reconstruction : c'est le point commun des crashs de Cyberpunk et de Crimson Desert (Preset B, modèle ≤ 0,6, 1 passe).",
+                    Apply = s => s.RrSafe = true });
+            decimal scale = feeder ? cur.FWorkingScale : cur.WorkingScale;
+            // ce qui a vraiment tourné : le menu du jeu peut avoir remis du Preset A dans l'INI installé, malgré le profil
+            bool ranA = false;
+            try { ranA = pf.Preset == "1" && g.Installed != null && dir == g.ExeDir && Ini.Get(Ini.ReadFile(Path.Combine(dir, "OptiScaler.ini")), "DlssNr", "Preset") == "1"; } catch { }
+            bool heavy = cur.Preset != 2 || scale > 0.67m || cur.Passes > 1 || ranA;
+            string ran = ranA && cur.Preset == 2 ? " D'après le log, la partie tournait en Preset A" + (pf.ModelInput != null ? " (" + pf.ModelInput + ")" : "") + " alors que le profil dit B : le menu du jeu l'a probablement changé ; appliquer réécrit l'INI du jeu." : "";
+            if (crashed && Regex.IsMatch(crash, "GPU") && heavy)
+                r.Add(new Fix { Id = "prudent", Short = "profil prudent", Text = "Profil prudent : Preset B, modèle à 0,6, 1 passe",
+                    Why = "La dernière partie a fini par « " + crash + " » avec un réglage lourd. Le Preset B coûte environ deux fois moins." + ran,
+                    Apply = s => { s.Preset = 2; s.Passes = 1; if (feeder) s.FWorkingScale = Math.Min(s.FWorkingScale, 0.6m); else s.WorkingScale = Math.Min(s.WorkingScale, 0.6m); } });
+            else if (pf.Samples > 0 && pf.AvgMs >= 8 && heavy)
+                r.Add(new Fix { Id = "leger", Short = "NR allégé", Text = "Alléger le NR : Preset B, modèle à 0,67",
+                    Why = "Le NR coûtait " + pf.AvgMs.ToString("0.0", CultureInfo.GetCultureInfo("fr-CA")) + " ms par image (à 60 FPS, le budget total est de 16,7 ms)." + ran,
+                    Apply = s => { s.Preset = 2; if (feeder) s.FWorkingScale = Math.Min(s.FWorkingScale, 0.67m); else s.WorkingScale = Math.Min(s.WorkingScale, 0.67m); } });
+            if (crashed && !cur.CrashDump)
+                r.Add(new Fix { Id = "dump", Short = "dump de crash", Text = "Activer le dump de crash",
+                    Why = "La dernière partie a planté (" + crash + ") : au prochain crash, OptiScaler écrira un OptiScaler_crash.dmp qui dit où ça a planté.",
+                    Apply = s => s.CrashDump = true });
+            if (os != null)
+            {
+                int rec = Regex.Matches(os, @"model feature created").Count;
+                if (rec > 3) r.Add(new Fix { Id = "recreations", Text = "Régler l'effet dans le launcher plutôt qu'en pleine partie",
+                    Why = "Le modèle a été créé " + rec + " fois : chaque changement de réglage en jeu le reconstruit, et c'est le moment le plus risqué. (À faire toi-même : rien à cocher.)" });
+            }
+            return r;
         }
 
         // Lecture des logs pour dire en clair ce qui s'est passé.

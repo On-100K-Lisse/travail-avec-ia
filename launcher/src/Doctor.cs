@@ -24,6 +24,8 @@ namespace Dlss5Launcher
             { "E16BCF15E16E13F527491CDF7845B2FE6521A738D8F7C9C721866A8496E1FC8E", "DLL NR 310.8 RTX 50 (guide F5)" },
             { "E67DEE209320CDAFE0E93E45675D7AA34323A53ACC57A72B2E40A181581C989A", "DLL NR 310.8 ShortFuse" },
             { "14017C79B30814E7EA3297291331A3A3AE5B2E6C4B9F4DD5AA7C4599BF061C2D", "OptiScaler F5 0.1.32" },
+            { "FD35BC693BA4133FA10E9746CE84486D617BB2AC5AE76E096FBAB77B28C8BAA2", "OptiScaler F5 0.1.34" },
+            { "42E76FB30E652F098556BDEF5B0165CB7C06F779AC23177B05DED2011D7F6655", "forwarder NR d'OptiScaler F5 0.1.34 (NVIDIA)" },
             { "FBFB6676B829DAD7E020FB830586A16AA0EC6ADD78016DB48EF12E2AE1803231", "OptiScaler 0.9.4 (1-Click)" },
             { "6198502F1B71D861964F41FC7FA8DE0268FBF994D439C9C6DC9005514B605A7F", "forwarder NR d'OptiScaler F5 0.1.32 (NVIDIA)" },
             { "30AEFC7AA19399C2905BFA64F69CCA7EB1574135425D905C0E2F052FC523099C", "forwarder vendor-neutral 0.1.32 (AMD/Intel)" },
@@ -52,6 +54,8 @@ namespace Dlss5Launcher
         public string Group, Rel, Label, Expected, Found, Detail;
         public PState State;
         public bool Needed;     // utilisé sur cette carte (ou pour une copie à un ami : tout)
+        public bool Extra;      // version d'OptiScaler ajoutée à côté de la 0.1.32 (payload\optiscaler-f5-<version>)
+        public string Folder;   // dossier de payload de cette version
         public bool Blocking { get { return State == PState.Manquant || State == PState.Abime; } }
         public string StateText
         {
@@ -174,8 +178,42 @@ namespace Dlss5Launcher
                 catch (Exception ex) { it.State = PState.Abime; it.Detail = "illisible : " + ex.Message; }
                 r.Add(it);
             }
+            // Versions d'OptiScaler ajoutées : présence, fichiers intacts, version reconnue (aucun hash « attendu »).
+            foreach (var folder in OptiVersions.Folders(payloadRoot).Where(x => x != OptiVersions.Default))
+            {
+                string od = Path.Combine(payloadRoot, folder);
+                foreach (var f in new[] { "OptiScaler.dll", "nvngx.dll_dlssnr.dll", "OptiScaler.ini", "OptiScaler" })
+                {
+                    var it = new PItem { Group = "OptiScaler — " + folder, Rel = folder + "\\" + f, Label = f, Extra = true, Folder = folder, Needed = false };
+                    string p = Path.Combine(od, f);
+                    try
+                    {
+                        if (f == "OptiScaler")
+                        {
+                            if (!Directory.Exists(p)) it.State = PState.Manquant;
+                            else { int n = Directory.GetFiles(p, "*", SearchOption.AllDirectories).Length; it.Found = n + " fichiers"; if (n < 10) { it.State = PState.Abime; it.Detail = "incomplet : " + n + " fichiers"; } }
+                        }
+                        else if (!File.Exists(p)) it.State = PState.Manquant;
+                        else if (new FileInfo(p).Length == 0) { it.State = PState.Abime; it.Detail = "fichier vide"; }
+                        else if (f.EndsWith(".ini")) it.Found = "présent";
+                        else
+                        {
+                            string pe = PeProblem(p);
+                            if (pe != null) { it.State = PState.Abime; it.Detail = pe; }
+                            else
+                            {
+                                string sha = ShaOf(p), known = KnownFiles.Identify(sha), ver = FileVersion(p);
+                                it.Found = Short(sha) + (ver != null ? "  (v " + ver + ")" : "");
+                                it.Detail = known != null ? "c'est : " + known + " — pas encore validée avec le launcher" : "version inconnue — pas encore validée avec le launcher";
+                            }
+                        }
+                    }
+                    catch (Exception ex) { it.State = PState.Abime; it.Detail = "illisible : " + ex.Message; }
+                    r.Add(it);
+                }
+            }
             // Mélange de versions dans OptiScaler : le cœur est bon mais un composant ne l'est pas (ou l'inverse).
-            var opti = r.Where(x => x.Group == GOpti && x.Expected != null && x.State != PState.Manquant).ToList();
+            var opti = r.Where(x => x.Group == GOpti && !x.Extra && x.Expected != null && x.State != PState.Manquant).ToList();
             if (opti.Any(x => x.State == PState.Ok) && opti.Any(x => x.State == PState.AutreVersion || x.State == PState.Inconnu))
                 foreach (var x in opti.Where(x => x.State == PState.AutreVersion || x.State == PState.Inconnu))
                     x.Detail = (x.Detail ?? "") + " — MÉLANGE de versions : le reste d'OptiScaler est la 0.1.32";
@@ -185,16 +223,22 @@ namespace Dlss5Launcher
         public static List<PItem> Check() { return Check(AppPaths.Payload, false); }
 
         // Problèmes qui touchent une installation précise sur cette carte.
-        public static List<PItem> ProblemsFor(InstallMode mode)
+        public static List<PItem> ProblemsFor(InstallMode mode) { return ProblemsFor(mode, OptiVersions.Default); }
+        public static List<PItem> ProblemsFor(InstallMode mode, string optiFolder)
         {
-            return Check().Where(x => x.State != PState.Ok && UsedBy(x.Group, mode)).ToList();
+            var all = Check();
+            bool opti = mode == InstallMode.OptiScaler || mode == InstallMode.Feeder;
+            var r = all.Where(x => !x.Extra && x.State != PState.Ok && UsedBy(x.Group, mode) && !(opti && x.Group == GOpti && optiFolder != OptiVersions.Default)).ToList();
+            if (opti && optiFolder != OptiVersions.Default) r.AddRange(all.Where(x => x.Extra && x.Folder == optiFolder && x.State != PState.Ok));
+            return r;
         }
 
         public static string Verdict(List<PItem> items)
         {
-            var bad = items.Where(x => x.Needed && x.State != PState.Ok).ToList();
+            var bad = items.Where(x => (x.Needed || x.Extra) && x.State != PState.Ok).ToList();
             int blocking = bad.Count(x => x.Blocking);
-            if (bad.Count == 0) return "tout est bon (" + items.Count(x => x.Needed) + " éléments vérifiés)";
+            int extra = items.Where(x => x.Extra).Select(x => x.Folder).Distinct().Count();
+            if (bad.Count == 0) return "tout est bon (" + items.Count(x => x.Needed) + " éléments vérifiés" + (extra > 0 ? ", + " + extra + " autre" + (extra > 1 ? "s" : "") + " version" + (extra > 1 ? "s" : "") + " d'OptiScaler" : "") + ")";
             return bad.Count + " problème" + (bad.Count > 1 ? "s" : "") + (blocking > 0 ? " dont " + blocking + " bloquant" + (blocking > 1 ? "s" : "") : "");
         }
 
@@ -205,11 +249,11 @@ namespace Dlss5Launcher
             if (!forFriend) sb.AppendLine("Carte : " + Gpu.Vendor + (Gpu.Series > 0 ? " RTX " + Gpu.Series + "xx" : "") + "   →   DLL NR utilisée : " + Gpu.NrLabel + (Gpu.IsAmdMode ? " + port vendor-neutral" : ""));
             sb.AppendLine("Verdict : " + Verdict(items) + (forFriend ? " (copie pour un ami : tout est vérifié)" : " pour cette carte"));
             sb.AppendLine();
-            foreach (var part in new[] { true, false })
+            foreach (var part in new[] { 0, 1, 2 })
             {
-                var sel = items.Where(x => x.Needed == part).ToList();
+                var sel = items.Where(x => part == 2 ? x.Extra : !x.Extra && x.Needed == (part == 0)).ToList();
                 if (sel.Count == 0) continue;
-                sb.AppendLine(part ? (forFriend ? "=== Payload complet" : "=== Utilisé sur ta carte") : "=== Pas utilisé sur ta carte (sert à une copie pour un ami)");
+                sb.AppendLine(part == 2 ? "=== Autres versions d'OptiScaler (choisies jeu par jeu, à côté de la 0.1.32 testée)" : part == 0 ? (forFriend ? "=== Payload complet" : "=== Utilisé sur ta carte") : "=== Pas utilisé sur ta carte (sert à une copie pour un ami)");
                 foreach (var grp in sel.GroupBy(x => x.Group))
                 {
                     sb.AppendLine(grp.Key);
@@ -232,7 +276,7 @@ namespace Dlss5Launcher
         {
             var sb = new StringBuilder();
             sb.AppendLine("- Verdict : " + Verdict(items));
-            foreach (var x in items.Where(x => x.Needed && x.State != PState.Ok))
+            foreach (var x in items.Where(x => (x.Needed || x.Extra) && x.State != PState.Ok))
                 sb.AppendLine("- " + x.StateText + " : `" + x.Rel + "`" + (x.Found != null ? " — " + x.Found : "") + (x.Detail != null ? " — " + x.Detail : ""));
             return sb.ToString();
         }
@@ -294,6 +338,69 @@ namespace Dlss5Launcher
             }
             catch (Exception ex) { return "illisible : " + ex.Message; }
             return null;
+        }
+    }
+
+    // Plusieurs versions d'OptiScaler côte à côte : payload\optiscaler-f5 (0.1.32, testée) et payload\optiscaler-f5-<version>.
+    // Le choix se fait jeu par jeu (optiscaler-par-jeu.tsv) ; il compte à la prochaine installation.
+    public static class OptiVersions
+    {
+        public const string Default = "optiscaler-f5";
+        static readonly object Lk = new object();
+        public static string FilePath { get { return Path.Combine(AppPaths.Root, "optiscaler-par-jeu.tsv"); } }
+
+        public static List<string> Folders() { return Folders(AppPaths.Payload); }
+        public static List<string> Folders(string payloadRoot)
+        {
+            var r = new List<string>();
+            try
+            {
+                foreach (var d in Directory.GetDirectories(payloadRoot))
+                {
+                    string n = Path.GetFileName(d);
+                    if ((n.Equals(Default, StringComparison.OrdinalIgnoreCase) || n.StartsWith(Default + "-", StringComparison.OrdinalIgnoreCase)) && File.Exists(Path.Combine(d, "OptiScaler.dll"))) r.Add(n);
+                }
+            }
+            catch { }
+            return r.OrderBy(x => x.Equals(Default, StringComparison.OrdinalIgnoreCase) ? "" : x, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+        public static string Dir(string folder) { return Path.Combine(AppPaths.Payload, folder); }
+
+        // « 0.1.32 », d'après le hash, sinon le nom du dossier, sinon les infos de version du fichier
+        public static string Version(string folder)
+        {
+            try
+            {
+                string n = KnownFiles.Identify(Hash.ShaCached(Path.Combine(Dir(folder), "OptiScaler.dll")));
+                if (n != null && n.StartsWith("OptiScaler F5 ")) return n.Substring(14);
+            }
+            catch { }
+            if (folder.StartsWith(Default + "-", StringComparison.OrdinalIgnoreCase)) return folder.Substring(Default.Length + 1);
+            return folder == Default ? "0.1.32 ?" : folder;
+        }
+        public static string Label(string folder)
+        {
+            return "OptiScaler F5 " + Version(folder) + (folder == Default ? "  (testée)" : "  (ajoutée, à tester)");
+        }
+
+        public static string For(string gameName)
+        {
+            string k = Installer.Safe(gameName), v = null;
+            lock (Lk)
+                try { if (File.Exists(FilePath)) foreach (var l in File.ReadAllLines(FilePath, Encoding.UTF8)) { var p = l.Split('\t'); if (p.Length >= 2 && p[0] == k) v = p[1]; } } catch { }
+            return v != null && Folders().Contains(v) ? v : Default;
+        }
+        public static void Set(string gameName, string folder)
+        {
+            string k = Installer.Safe(gameName);
+            lock (Lk)
+            {
+                var lines = new List<string>();
+                try { if (File.Exists(FilePath)) lines = File.ReadAllLines(FilePath, Encoding.UTF8).Where(l => !l.StartsWith(k + "\t")).ToList(); } catch { }
+                if (folder != Default) lines.Add(k + "\t" + folder);
+                File.WriteAllLines(FilePath, lines, new UTF8Encoding(false));
+            }
+            Log.W("Version d'OptiScaler pour " + gameName + " : " + Label(folder));
         }
     }
 }
