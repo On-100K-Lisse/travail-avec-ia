@@ -7,6 +7,18 @@ le 13 août 2026 ; projet **construit au complet par Claude le même jour**
 l'étape 1, le mot de passe d'application Gmail — l'agent n'a jamais tourné.
 Histoire reconstituée et vérifiée le 26 octobre 2026 à partir des conversations
 partagées de Claude et de Gemini.
+**Mise à jour v2 (26 octobre 2026) :** Claude a récupéré le code d'août (ses
+tests passaient encore) et l'a mis à jour en une passe : canal principal =
+la base de données, lue par **Kai** via la commande `veille-kai` (alertes en
+attente, accusés de livraison, recherche, santé) ; courriel devenu facultatif
+et désactivé par défaut ; santé des sources dans le rapport du vendredi ;
+volet animés actif (AniList, Anime News Network, r/AnimeDubs) ; filtre
+anti-spoiler GTA 6 en deux couches et directive de légalité appliquée dès le
+préfiltre. **84 vérifications hors ligne passent.** Pas encore déployée —
+les vraies sources se valideront sur le Dell. Détails : `CHANGELOG.md` du
+projet de l'agent (v2). Les backends PSN/Xbox, les métadonnées Crunchyroll /
+ADN / Netflix et les CV de comédiens de doublage restent **hors périmètre**
+à ce jour (décision consignée dans le README et `sources.yaml` de l'agent).
 **But :** surveiller l'actualité de studios et de jeux précis, sans avoir à la
 chercher soi-même chaque jour.
 
