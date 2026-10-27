@@ -93,8 +93,16 @@ directement sur un terminal administrateur, sans mot de passe.
 Cette modification de GRUB n'est **pas permanente** : elle ne vaut que pour ce démarrage.
 
 **Limite :** si le disque est chiffré (LUKS), Debian demande la phrase de chiffrement avant tout
-le reste, et cette méthode ne la contourne pas. Le disque du serveur est-il chiffré : inconnu
-(temporaire).
+le reste, et cette méthode ne la contourne pas. Pour savoir si un disque est chiffré :
+
+```bash
+lsblk -f
+```
+
+Si `crypto_LUKS` apparaît dans la colonne `FSTYPE`, le disque est chiffré.
+
+**Sur le serveur du homelab :** vérifié par Kai le 27 octobre 2026, aucun `crypto_LUKS`, la
+partition système est en ext4. Le disque **n'est pas chiffré**, donc la méthode GRUB fonctionne.
 
 **Pourquoi ça marche, et ce que ça veut dire pour la sécurité :** quiconque a le portable entre
 les mains peut faire la même chose. C'est normal pour un serveur à la maison; c'est aussi

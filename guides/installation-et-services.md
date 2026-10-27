@@ -252,9 +252,22 @@ tant qu'il est allumé. Le routeur lui redonne donc la même adresse à chaque r
 longtemps que cette durée (une panne de courant la nuit, et personne pour le rallumer, voir
 l'étape 5), le routeur peut donner son adresse à un autre appareil, et le serveur en reçoit une
 nouvelle au redémarrage. Les appareils de la maison basculent alors sur leur DNS secondaire
-(Internet continue de marcher, mais sans le bloqueur), jusqu'à ce qu'on corrige leur DNS. La
-durée du bail de la passerelle : inconnue (temporaire). Après une longue panne, le premier
-réflexe est donc de vérifier l'adresse du serveur avec `hostname -I`.
+(Internet continue de marcher, mais sans le bloqueur), jusqu'à ce qu'on corrige leur DNS.
+
+**Combien de temps ça laisse :** le bail de la passerelle dure **48 heures** (mesuré par Kai
+sur le serveur le 27 octobre 2026 : `dhcp_lease_time = 172800` secondes). Un appareil renouvelle
+normalement son bail à mi-parcours, donc au moment d'une panne, il lui reste entre 24 et
+48 heures. En pratique :
+
+- **panne de moins de 24 heures :** l'adresse attend le serveur, rien à faire;
+- **panne de plus de 24 à 48 heures :** la passerelle *peut* donner l'adresse à un autre
+  appareil. C'est possible, pas automatique : sur un réseau de maison avec peu d'appareils, la
+  passerelle a beaucoup d'adresses libres et réattribue rarement une adresse récente.
+
+**Après une longue panne :** vérifier l'adresse du serveur avec `hostname -I`. Kai peut aussi le
+faire à distance : son accès passe par Tailscale, qui ne dépend pas de l'adresse locale, et sa
+surveillance remarque déjà les redémarrages imprévus. Si l'adresse a changé, corriger le DNS
+principal des appareils branchés (étape 7).
 
 ## Étape 5 — Empêcher la mise en veille
 
