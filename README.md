@@ -27,7 +27,7 @@ ajoutés un à la fois. Kai surveille la machine toutes les heures à travers Ta
 | Wifi, SSH | ✅ Juillet 2026 (Claude) |
 | SSH par clés seulement, anti-veille, Tailscale, AdGuard Home, surveillance | ✅ 26 octobre 2026 (Kai) |
 | Brancher les autres appareils | 🟡 En cours |
-| Adresse IP locale fixe | ⚠️ Impossible par le routeur (passerelle verrouillée) |
+| Adresse IP locale fixe | ⚠️ Pas de réservation possible (passerelle verrouillée); l'adresse tient par le bail DHCP |
 | Prochain service : l'agent de veille OSINT | Prévu, pas commencé |
 
 **Limites connues :** la batterie du portable est morte et le BIOS ne redémarre pas tout seul

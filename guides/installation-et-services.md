@@ -21,7 +21,7 @@ machine, et par qui**, puis **comment le refaire**. Les détails de la relance d
 | 1. Faire marcher le wifi (carte Broadcom BCM4322) | ✅ Fait et testé (juillet) | Claude |
 | 2. Accès à distance par SSH | ✅ Fait (juillet), puis passé en **clés seulement** (26 octobre) | Claude, puis Kai |
 | 3. Stabiliser le wifi pour un serveur | Sans objet depuis octobre : le serveur est branché en Ethernet | — |
-| 4. Adresse IP fixe | Réservation DHCP impossible (passerelle verrouillée). L'adresse Tailscale, elle, est stable. Contournement pour l'IP locale : inconnu (temporaire) | — |
+| 4. Adresse IP fixe | Réservation DHCP impossible (passerelle verrouillée). L'adresse Tailscale est stable; l'adresse locale tient par le renouvellement du bail DHCP | Kai |
 | 5. Empêcher la mise en veille | ✅ Fait et prouvé (26 octobre) | Kai |
 | 6. Installer AdGuard Home | ✅ En service (26 octobre) | Kai |
 | 7. Diriger les appareils vers le bloqueur | 🟡 En cours : 2 appareils branchés à la main | Kai |
@@ -242,8 +242,19 @@ le mot de passe wifi. La réservation n'a donc pas pu être faite.
 **Ce qui compense en partie :** depuis octobre, le serveur a aussi une adresse **Tailscale**
 (voir l'étape 8), qui est stable par conception. Pour l'administration à distance, elle suffit.
 Par contre, les appareils de la maison pointent leur DNS vers l'adresse **locale** du serveur :
-si elle change un jour, il faudra les reconfigurer. Comment c'est géré pour l'instant : inconnu
-(temporaire).
+si elle change un jour, il faudra les reconfigurer.
+
+**Comment l'adresse locale tient pour l'instant** (information de Kai, transmise par
+On-100-K-Lisse le 27 octobre 2026) : par le **bail DHCP**, que le serveur renouvelle en continu
+tant qu'il est allumé. Le routeur lui redonne donc la même adresse à chaque renouvellement.
+
+**La faille de cette solution :** un bail a une durée limitée. Si le serveur reste éteint plus
+longtemps que cette durée (une panne de courant la nuit, et personne pour le rallumer, voir
+l'étape 5), le routeur peut donner son adresse à un autre appareil, et le serveur en reçoit une
+nouvelle au redémarrage. Les appareils de la maison basculent alors sur leur DNS secondaire
+(Internet continue de marcher, mais sans le bloqueur), jusqu'à ce qu'on corrige leur DNS. La
+durée du bail de la passerelle : inconnue (temporaire). Après une longue panne, le premier
+réflexe est donc de vérifier l'adresse du serveur avec `hostname -I`.
 
 ## Étape 5 — Empêcher la mise en veille
 
