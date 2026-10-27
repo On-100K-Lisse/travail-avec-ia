@@ -408,19 +408,60 @@ sudo ss -tulpn | grep :53
 Si rien ne s'affiche, c'est bon. Si `systemd-resolved` apparaît, il faut le désactiver
 proprement avant de continuer.
 
-Installer avec le script officiel d'AdGuard :
+#### La méthode utilisée sur ce serveur : installation à la main
+
+*Relevée par Kai directement sur le serveur le 27 octobre 2026, et conforme à la session
+d'installation du 26 octobre.*
+
+Kai n'a **pas** utilisé de script d'installation automatique. La séquence a été :
+téléchargement de l'archive officielle → extraction dans `/opt/AdGuardHome` → création du
+service par le programme lui-même → assistant web.
+
+1. **Télécharger l'archive officielle** (un fichier `.tar.gz`, l'équivalent Linux d'un `.zip`).
+   Il faut la version qui correspond au processeur. Pour la connaître :
+   ```bash
+   dpkg --print-architecture     # amd64 = PC 64 bits
+   ```
+   Debian 13 ne s'installe plus qu'en 64 bits sur PC, donc ce sera normalement `amd64`. Par
+   exemple, depuis les publications officielles sur GitHub :
+   ```bash
+   cd /tmp
+   wget https://github.com/AdguardTeam/AdGuardHome/releases/latest/download/AdGuardHome_linux_amd64.tar.gz
+   ```
+   (L'adresse exacte que Kai a utilisée n'est pas précisée; l'archive, elle, est l'officielle.)
+2. **L'extraire dans `/opt`.** L'archive contient déjà un dossier `AdGuardHome`, donc on obtient
+   `/opt/AdGuardHome/` :
+   ```bash
+   sudo tar -C /opt -xzf AdGuardHome_linux_amd64.tar.gz
+   ls /opt/AdGuardHome     # AdGuardHome, AdGuardHome.sig, CHANGELOG.md, LICENSE.txt, README.md
+   ```
+   C'est exactement ce qu'on trouve sur le serveur. Le fichier `AdGuardHome.sig` est la
+   signature numérique du programme : elle permet de vérifier qu'il vient bien d'AdGuard.
+3. **Laisser le programme créer son propre service systemd :**
+   ```bash
+   cd /opt/AdGuardHome
+   sudo ./AdGuardHome -s install
+   sudo systemctl status AdGuardHome
+   ```
+   La commande `-s install` écrit le fichier `/etc/systemd/system/AdGuardHome.service`, qui
+   lance `AdGuardHome -s run` depuis ce dossier, au démarrage de la machine, avec redémarrage
+   automatique si le programme plante.
+4. Continuer avec l'assistant web (section suivante).
+
+**Pourquoi à la main plutôt qu'avec un script :** on voit chaque étape, on sait où tout est
+installé, et on n'exécute pas un script téléchargé sans l'avoir lu.
+
+#### L'autre méthode : le script officiel
+
+AdGuard fournit aussi un script qui fait les étapes 1 à 3 d'un coup :
 
 ```bash
 curl -s -S -L https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh | sudo sh -s -- -v
-sudo systemctl status AdGuardHome
 ```
 
-Ce `curl | sh` télécharge un script et l'exécute directement : à ne faire qu'avec une source de
-confiance. Le script installe AdGuard Home dans `/opt/AdGuardHome/` et le déclare comme service
-systemd, qui redémarre tout seul au démarrage de la machine.
-
-Kai indique avoir installé le **binaire officiel**; s'il a utilisé ce script ou une autre
-méthode : inconnu (temporaire).
+Ce `curl | sh` télécharge un script et l'exécute directement, avec les droits administrateur :
+à ne faire qu'avec une source de confiance. Le résultat est le même (programme dans
+`/opt/AdGuardHome/`, service systemd). Cette méthode n'a pas été utilisée ici.
 
 ### Configuration
 
