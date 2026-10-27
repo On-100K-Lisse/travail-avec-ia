@@ -165,10 +165,71 @@ Tailscale) est acceptée.
 encore pour ouvrir une session directement sur le portable et pour `sudo`. Si on perd l'accès,
 voir le guide [`recuperer-acces.md`](recuperer-acces.md).
 
-Les commandes exactes utilisées par Kai ne sont pas publiées dans son journal : inconnues
-(temporaire). On sait seulement que la désactivation du mot de passe est dans un fichier dédié
-sous `/etc/ssh/sshd_config.d/`, et qu'elle a été vérifiée avant le redémarrage du service
-(pour ne pas s'enfermer dehors).
+#### Comment c'est fait sur le serveur
+
+*Contenu du fichier et ordre des étapes relevés par Kai directement sur le serveur, le
+27 octobre 2026.*
+
+Tout tient dans **un seul fichier**, le seul du dossier `sshd_config.d/` :
+
+```conf
+# /etc/ssh/sshd_config.d/99-keys-only.conf
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+```
+
+- `PasswordAuthentication no` : refuse les mots de passe.
+- `KbdInteractiveAuthentication no` : ferme une deuxième porte qui peut aussi demander un mot
+  de passe (l'authentification « clavier interactif »). Sans cette ligne, un mot de passe
+  pourrait encore passer par là.
+- `PubkeyAuthentication yes` : accepte les clés (c'est déjà la valeur par défaut, mais l'écrire
+  rend l'intention claire).
+
+**Pourquoi un fichier à part plutôt que modifier `sshd_config` :** le fichier principal de
+Debian lit tous les fichiers `.conf` de `sshd_config.d/`. Mettre ses réglages dans un fichier à
+soi évite les conflits quand une mise à jour de Debian veut remplacer `sshd_config`, et pour
+annuler, il suffit d'effacer ce fichier.
+
+**La séquence, dans cet ordre.** L'ordre compte : une erreur dans la configuration SSH peut
+fermer la porte à distance, et sur un serveur sans écran, on se retrouve à devoir y brancher un
+clavier.
+
+1. **Avant tout :** s'assurer qu'une clé fonctionne déjà (se connecter avec elle). Sinon, on
+   s'enferme dehors en refusant les mots de passe.
+2. Créer le fichier, par exemple :
+   ```bash
+   sudo nano /etc/ssh/sshd_config.d/99-keys-only.conf
+   ```
+   (Kai ne précise pas avec quel outil il l'a créé; le contenu, lui, est celui ci-dessus.)
+3. Vérifier que la configuration n'a pas d'erreur de syntaxe. Aucune réponse = aucune erreur :
+   ```bash
+   sudo sshd -t
+   ```
+4. Vérifier la configuration **réellement appliquée** :
+   ```bash
+   sudo sshd -T | grep -i -E "passwordauthentication|kbdinteractive|pubkeyauthentication"
+   ```
+   On doit voir `no`, `no`, `yes`. Cette étape compte : dans SSH, pour un même réglage, **la
+   première valeur lue gagne**. Si un autre fichier du dossier, lu avant celui-ci, disait le
+   contraire, c'est lui qui l'emporterait. `sshd -T` montre le résultat final, peu importe d'où
+   il vient.
+5. Seulement ensuite, redémarrer le service :
+   ```bash
+   sudo systemctl restart ssh
+   ```
+   Conseil : garder la session SSH actuelle ouverte pendant ce redémarrage (elle n'est pas
+   coupée), et faire les tests dans une **deuxième** fenêtre. Si quelque chose cloche, on peut
+   encore corriger depuis la première.
+6. Tester les trois cas. Sur ce serveur : la clé de l'administrateur depuis Windows a été
+   acceptée; une tentative par mot de passe a été refusée avec
+   `Permission denied (publickey)`; la clé de Kai via Tailscale a été acceptée.
+
+Pour forcer un essai par mot de passe et confirmer le refus :
+
+```powershell
+ssh -o PubkeyAuthentication=no NOM_UTILISATEUR@IP_DU_PORTABLE
+```
 
 ## Étape 3 — Stabiliser le wifi pour un usage serveur
 
