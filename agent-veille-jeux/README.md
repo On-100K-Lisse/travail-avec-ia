@@ -124,7 +124,7 @@ techniques.
 ## Installation (résumé)
 
 **Prérequis :** un serveur Debian (ici un vieux portable, voir le guide homelab dans la branche
-`ai/claude/linux`), Python 3, une clé d'API Gemini (gratuite sur Google AI Studio), un compte
+[`ai/claude/homelab`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/homelab)), Python 3, une clé d'API Gemini (gratuite sur Google AI Studio), un compte
 Gmail avec la validation en deux étapes activée, et une clé d'API Steam (facultative).
 
 ```bash
