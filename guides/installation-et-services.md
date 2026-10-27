@@ -422,13 +422,22 @@ service par le programme lui-même → assistant web.
    ```bash
    dpkg --print-architecture     # amd64 = PC 64 bits
    ```
-   Debian 13 ne s'installe plus qu'en 64 bits sur PC, donc ce sera normalement `amd64`. Par
-   exemple, depuis les publications officielles sur GitHub :
+   **Sur ce serveur : `amd64`**, vérifié par Kai le 27 octobre 2026 (`uname -m` donne
+   `x86_64`, et le noyau installé est le `6.12.113+deb13-amd64`).
+
+   L'archive qui correspond à la version installée ici (v0.107.79) est, dans les publications
+   officielles d'AdGuard Home sur GitHub :
    ```bash
    cd /tmp
-   wget https://github.com/AdguardTeam/AdGuardHome/releases/latest/download/AdGuardHome_linux_amd64.tar.gz
+   wget https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.79/AdGuardHome_linux_amd64.tar.gz
    ```
-   (L'adresse exacte que Kai a utilisée n'est pas précisée; l'archive, elle, est l'officielle.)
+   Le lien exact cliqué le soir du 26 octobre ne peut pas être prouvé après coup, mais la
+   version et l'architecture désignent ce seul fichier, et son contenu correspond à ce qui se
+   trouve dans `/opt/AdGuardHome`.
+
+   **Pour une nouvelle installation**, prendre plutôt la dernière version :
+   `https://github.com/AdguardTeam/AdGuardHome/releases/latest/download/AdGuardHome_linux_amd64.tar.gz`.
+   Une ancienne version peut contenir des failles corrigées depuis.
 2. **L'extraire dans `/opt`.** L'archive contient déjà un dossier `AdGuardHome`, donc on obtient
    `/opt/AdGuardHome/` :
    ```bash
