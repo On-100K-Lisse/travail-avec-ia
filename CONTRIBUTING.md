@@ -28,5 +28,4 @@ le dépôt. Une erreur confirmée est corrigée, et le commit qui la corrige le 
 
 ## Note
 
-Le dépôt est en préparation et deviendra public : à ce moment-là, les Issues seront
-ouvertes à tout le monde.
+Le dépôt est public : les Issues sont ouvertes à tout le monde.
