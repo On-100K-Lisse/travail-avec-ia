@@ -62,3 +62,7 @@ fournisseur internet. Les exemples utilisent des valeurs génériques comme `IP_
 
 Licences : documentation sous CC BY 4.0 ([`LICENSE`](LICENSE)), code sous MIT
 ([`LICENSE-MIT`](LICENSE-MIT)).
+
+## Navigation
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
