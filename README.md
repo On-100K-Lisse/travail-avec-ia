@@ -18,3 +18,16 @@ dans l'historique de cette branche, au commit `76c1e81`.
 
 Licences : documentation sous CC BY 4.0 ([`LICENSE`](LICENSE)), code sous MIT
 ([`LICENSE-MIT`](LICENSE-MIT)).
+
+## Navigation
+
+**Documents de cette branche :**
+
+- [Zorin OS : écran en « bouillie de pixels », `nomodeset` et résolution](zorin-affichage/README.md)
+
+**Sur le même thème (homelab) :**
+
+- [Homelab — Claude](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/homelab)
+- [Homelab — Kai](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/homelab)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
