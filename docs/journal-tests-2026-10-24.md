@@ -63,8 +63,9 @@ Ces chiffres viennent de l'historique du launcher (`historique.csv`), qui les li
 À retenir :
 
 - **OptiScaler 0.1.34 fonctionne** dans Species: Unknown, en Feeder F5Low, sur 1 h 27.
-- **En Preset B, le NR coûte environ deux fois moins** dans Species: Unknown : ≈ 3,9 ms contre
-  ≈ 6,0 ms en Preset A le 24 octobre, avec la même taille de modèle (1552×864).
+- **En Preset B, le NR coûte environ un tiers de moins** dans Species: Unknown : ≈ 3,9 ms contre
+  ≈ 6,0 ms en Preset A le 24 octobre, avec la même taille de modèle (1552×864). La version
+  d'OptiScaler avait aussi changé entre les deux (0.1.32 → 0.1.34).
 - **Le crash `0x8000` n'est ni confirmé ni écarté.** Le 24 octobre, il était arrivé après 2 h 36 ;
   1 h 27 sans crash ne suffit pas pour conclure. Plusieurs choses ont aussi changé en même temps
   (Preset A → B, OptiScaler 0.1.32 → 0.1.34). Le protocole de test du launcher dira « trop peu pour
