@@ -44,3 +44,7 @@ eux pour vérifier qu'il démarre.
   - TweakXL, ArchiveXL et Codeware : psiberx;
   - Native Settings UI : auteur inconnu (temporaire).
 - Concept du mod : On-100-K-Lisse. Document de design : Claude.
+
+---
+
+Retour : [README de la branche](../../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
