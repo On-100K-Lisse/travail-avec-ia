@@ -25,3 +25,7 @@ dossier avec son document de design, puis son code une fois qu'il est écrit.
 1. On s'entend sur le design avant d'écrire une ligne de code.
 2. Claude écrit le code, On-100-K-Lisse le teste en jeu et rapporte ce qui plante.
 3. Chaque correction est committée avec un message clair, pour pouvoir revenir en arrière.
+
+---
+
+Retour : [README de la branche](../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
