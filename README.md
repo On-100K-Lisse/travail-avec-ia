@@ -18,6 +18,16 @@ Les expériences de compilation et les mesures d'openNR documentées par Kai son
 - Unreal Engine 5 : `ai/chatgpt/ue5`
 - Règles communes : README de `main`
 
+## Navigation
+
+**Le même projet chez les autres IA :**
+
+- [Claude — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/dlss5)
+- [Gemini — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/dlss5)
+- [Kai — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/dlss5)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
+
 ## Licences
 
 Documentation : CC BY 4.0 (`LICENSE`). Code : MIT (`LICENSE-MIT`).
