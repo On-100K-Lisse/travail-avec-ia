@@ -12,3 +12,13 @@ Documenter les procédures d'installation (manuelles et automatisées), les corr
 ## 3. Cas d'étude principal : Cyberpunk 2077
 - **Défis techniques traités :** Gestion des artefacts visuels (ghosting, instabilité temporelle), contournement des vérifications de version et stabilisation du framerate.
 - **Monitoring & Validation :** Suivi des métriques via MSI Afterburner (1% lows, frametime, consommation VRAM) et validation visuelle sur dalle 2K (1440p) QD-MiniLED.
+
+## Navigation
+
+**Le même projet chez les autres IA :**
+
+- [ChatGPT — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/dlss5)
+- [Claude — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/dlss5)
+- [Kai — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/dlss5)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
