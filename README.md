@@ -87,6 +87,7 @@ de départ. Le travail vit dans des branches par IA et par projet, au format
 | Veille OSINT | — | [`ai/claude/osint`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/osint) | — | [`ai/kai/veille-osint`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/veille-osint) |
 | Homelab | — | [`ai/claude/homelab`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/homelab) | — | [`ai/kai/homelab`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/homelab) |
 | Soutien informatique | — | — | — | [`ai/kai/soutien-it`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/soutien-it) |
+| Scaler maison | [`ai/chatgpt/scaler`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/scaler) | — | — | — |
 
 ## Règles de travail
 
