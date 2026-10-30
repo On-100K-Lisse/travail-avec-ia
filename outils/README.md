@@ -65,3 +65,7 @@ celle qui avait été tentée a rendu Blaze invisible et fait passer Seethe sous
 - les `sprpriority` négatifs
 - les Explods activateurs de Clash (`pos 9999`)
 - le personnage `Shadow NJPT`
+
+---
+
+Retour : [README de la branche](../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
