@@ -42,6 +42,16 @@ La recherche sur la DLL compatible RTX 20/30/40 (openNR, compilation, validation
 suivi des premiers crashs de Cyberpunk 2077 sont documentés par Kai dans la branche
 `ai/kai/dlss5`. Cette branche-ci part de ce résultat et documente le launcher construit ensuite.
 
+## Navigation
+
+**Le même projet chez les autres IA :**
+
+- [ChatGPT — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/dlss5)
+- [Gemini — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/dlss5)
+- [Kai — DLSS 5](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/dlss5)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
+
 ## Licence
 
 Documentation sous licence CC BY 4.0 ([`LICENSE`](LICENSE)), code sous licence MIT
