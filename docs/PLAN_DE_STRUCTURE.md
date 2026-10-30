@@ -8,6 +8,7 @@
 > 3. Le jalon 3 (menu) est déplaçable : il ne bloque pas le jalon 4 (note aux jalons).
 > 4. Jalon 8 : ajout de la question de l'observation en boîte noire aux options à qualifier (section « Risques »).
 > Alignement factuel (pas une correction du fond) : l'hébergement du code est tranché — cette branche (section « Outils »).
+> **Complété le 30 octobre 2026 à partir du fichier original (.docx) transmis par On-100-K-Lisse** : liens officiels des briques restaurés (absents du texte copié-collé) et schéma des six modules transcrit ci-dessous depuis l'image d'origine.
 
 Ce scaler appartient à On-100-K-Lisse : il est écrit à partir de zéro, sans une ligne copiée d'OptiScaler, pour que son auteur en choisisse librement la licence. Ce plan a été écrit à partir de la documentation publique des API et des SDK, pas du code source d'OptiScaler.
 
@@ -52,7 +53,17 @@ Le scaler est une seule DLL faite de six modules séparés, chacun testable seul
 
 Le jeu charge notre DLL sans le savoir ; elle intercepte ses appels, rassemble les ingrédients et les donne à l'upscaler choisi, puis l'image part à l'écran. Le menu modifie les réglages, et le journal permet au launcher de suivre chaque partie.
 
-*(Note de Kai au dépôt : le schéma détaillé des six modules ne faisait pas partie du texte transmis ; il reste dans l'artefact original de Claude.)*
+**Le schéma de Claude** (« Le scaler se glisse entre le jeu et l'écran, en six modules » — image dans l'artefact d'origine, transcrite par Kai le 30 octobre 2026) :
+
+- Le jeu rend l'image, puis appelle Present → il charge **dxgi.dll**.
+- **Notre scaler (une DLL)** — garde-fou : un module en échec laisse passer l'image d'origine.
+  1. **Chargement** — une dxgi.dll que le jeu charge tout seul ; elle renvoie à la vraie DLL.
+  2. **Interception** — attrape Present et les appels DLSS, FSR, XeSS du jeu (MinHook).
+  3. **Ingrédients** — couleur, profondeur, mouvement, jitter et exposition. *(Les ingrédients vont à l'upscaler.)*
+  4. **Upscalers** — FSR ou XeSS d'abord, le NR plus tard (décision au jalon 8).
+  5. **Menu en jeu** — Dear ImGui, sur une touche configurable ; il change les réglages.
+  6. **Réglages et journal** — fichier INI, et un journal lisible par le launcher (historique, Conseils).
+- Sorties : **l'écran** (image finale, HUD compris) et **le launcher** (installe, réinitialise, lit le journal).
 
 ## Étapes de fabrication
 
@@ -82,13 +93,13 @@ Se servir d'une bibliothèque tierce n'est pas copier : elle reste à ses auteur
 
 | Brique | À quoi elle sert | Licence | Ce que ça implique |
 |---|---|---|---|
-| MinHook | Intercepter une fonction (Present, appels de l'upscaler) | BSD 2 clauses | Libre ; garder sa mention de copyright |
-| Microsoft Detours | Même rôle, alternative à MinHook | MIT | Libre ; garder sa mention |
+| [MinHook](https://github.com/TsudaKageyu/minhook) | Intercepter une fonction (Present, appels de l'upscaler) | BSD 2 clauses | Libre ; garder sa mention de copyright |
+| [Microsoft Detours](https://github.com/microsoft/Detours) | Même rôle, alternative à MinHook | MIT | Libre ; garder sa mention |
 | Dear ImGui | Le menu en jeu | MIT | Libre ; garder sa mention |
-| NVIDIA Streamline | Comprendre comment les jeux récents appellent DLSS | Type MIT | Libre ; garder sa mention |
-| NVIDIA DLSS SDK | La documentation de DLSS (NGX) | NVIDIA RTX SDKs License | Licence propriétaire : à lire en entier avant de s'en servir dans un outil injecté |
-| Intel XeSS SDK | Upscaler de remplacement | Intel Simplified Software License | Redistribution des DLL permise sous conditions ; à relire avant de les livrer |
-| AMD FidelityFX SDK (2.x, actuel) | FSR comme upscaler de remplacement | Licence AMD : binaires seulement | DLL redistribuables, mais décompilation interdite et code non modifiable |
+| [NVIDIA Streamline](https://github.com/NVIDIA-RTX/Streamline) | Comprendre comment les jeux récents appellent DLSS | Type MIT | Libre ; garder sa mention |
+| [NVIDIA DLSS SDK](https://github.com/NVIDIA/DLSS) | La documentation de DLSS (NGX) | NVIDIA RTX SDKs License | Licence propriétaire : à lire en entier avant de s'en servir dans un outil injecté |
+| [Intel XeSS SDK](https://github.com/intel/xess) | Upscaler de remplacement | Intel Simplified Software License | Redistribution des DLL permise sous conditions ; à relire avant de les livrer |
+| [AMD FidelityFX SDK](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK) (2.x, actuel) | FSR comme upscaler de remplacement | Licence AMD : binaires seulement | DLL redistribuables, mais décompilation interdite et code non modifiable |
 
 Les anciennes versions de FSR publiées avec leur code source (FSR 2, FSR 3) avaient une autre licence : inconnu (temporaire), à vérifier avant de les choisir. La DLL NR de NVIDIA n'est dans aucune de ces boîtes : elle n'est livrée qu'avec un jeu (NBA 2K27) et ne sera jamais distribuée avec notre scaler.
 
@@ -104,7 +115,7 @@ Pour compiler :
 Pour voir ce qui se passe dans le jeu :
 
 - Le journal du scaler : la première source d'information, à chaque jalon.
-- RenderDoc : capture une image du jeu et montre chaque texture, dont la profondeur et les vecteurs de mouvement. Indispensable pour le jalon 7.
+- [RenderDoc](https://renderdoc.org/) : capture une image du jeu et montre chaque texture, dont la profondeur et les vecteurs de mouvement. Indispensable pour le jalon 7.
 - PIX pour Windows (Microsoft) et NVIDIA Nsight Graphics : même idée, avec les temps GPU détaillés.
 - La couche de débogage Direct3D 12 (fonction Windows « Outils graphiques ») : signale les erreurs d'utilisation de l'API au lieu de laisser le jeu planter sans explication.
 
