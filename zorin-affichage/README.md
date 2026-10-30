@@ -159,3 +159,7 @@ alors le problème pour de bon, mieux que des heures de contournements logiciels
 - [ ] Lancer `lspci -k | grep -A3 -i vga` pour identifier la carte graphique.
 - [ ] Tester l'option ciblée du chemin 2 correspondant à la carte.
 - [ ] Mettre à jour ce guide avec le résultat.
+
+---
+
+Retour : [README de la branche](../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
