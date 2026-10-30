@@ -436,3 +436,7 @@ propriétaires. Ce projet n'est affilié à aucun d'eux.
 
 Idée, essais en jeu et décisions : On-100-K-Lisse. Code et documentation : Claude. Le docteur payload
 et le blocage anti-cheat de la copie pour un ami viennent d'idées proposées par Kai (`ai/kai/dlss5`).
+
+---
+
+Retour : [README de la branche](../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
