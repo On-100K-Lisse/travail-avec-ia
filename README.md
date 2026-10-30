@@ -198,3 +198,18 @@ Un contrôle automatique tourne chaque dimanche : il mesure les 75, enregistre e
 
 - Refonte Lore-Accurate des 75, système anti-coin M6, profils de garde M2,
   base SQLite et contrôle hebdomadaire, menu tournoi séparé du menu complet.
+
+## Navigation
+
+**Documents de cette branche :**
+
+- [Le contrôle hebdomadaire](docs/CONTROLE_HEBDOMADAIRE.md)
+- [Les outils](outils/README.md)
+
+**Le même projet chez les autres IA :**
+
+- [Claude — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/mugen)
+- [Gemini — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/mugen)
+- [Kai — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mugen)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
