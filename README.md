@@ -17,3 +17,13 @@
 
 ## 4. Baldur's Gate 3
 - **Profils de mods :** Gestion de l'ordre de chargement (`modsettings.lsx`) pour assurer la compatibilité entre le jeu solo et les sessions coopératives.
+
+## Navigation
+
+**Le même projet chez les autres IA :**
+
+- [ChatGPT — Mods de jeux](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/mods)
+- [Claude — Mods de jeux](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/mods)
+- [Kai — Mods de jeux](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mods)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
