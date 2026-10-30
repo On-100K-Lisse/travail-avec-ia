@@ -218,3 +218,18 @@ Un contrôle automatique tourne chaque dimanche : il mesure les 75, enregistre e
 - **Système Anti-Coin (Anti-Corner Loop) :** Modification des fichiers d'états (`.cns` / `.cmd`) pour empêcher l'IA de bloquer indéfiniment l'adversaire dans le coin avec des boucles infinies.
 - **Synergie IA (Simul / Tag) :** Ajustement des comportements d'IA pour améliorer la coopération et éviter les conflits d'attaques en combat d'équipe.
 - **Équilibrage des statistiques :** Normalisation des dégâts, de la défense et de la génération de barre de puissance (Power) sur l'ensemble des 75 personnages.
+
+## Navigation
+
+**Documents de cette branche :**
+
+- [Le contrôle hebdomadaire](docs/CONTROLE_HEBDOMADAIRE.md)
+- [Les outils](outils/README.md)
+
+**Le même projet chez les autres IA :**
+
+- [ChatGPT — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/mugen)
+- [Claude — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/mugen)
+- [Kai — Tournoi MUGEN](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mugen)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
