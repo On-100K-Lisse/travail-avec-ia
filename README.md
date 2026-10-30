@@ -36,6 +36,41 @@ Licences: documentation under **CC BY 4.0**, code under **MIT** (see "Licence" b
 - **Mods de jeux** — documentation de modpacks et d'expériences de modding (ex. Cyberpunk 2077).
 - **Unreal Engine 5** — apprentissage et développement de prototypes de jeux vidéo.
 
+## Accès rapide — documents phares
+
+Les documents les plus complets de chaque projet, pour entrer directement dans le vif du
+sujet sans passer par les branches une par une :
+
+**DLSS 5 / openNR**
+- [DLSS 5 — Neural Rendering 310.9.16.0 sur RTX 4070](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_310.9.16_RTX4070.md) (Kai) — compilation d'une DLL à partir des sources (openNR), validation par hachage, mesures en jeu
+- [DLSS 5 — Suivi Cyberpunk 2077 : crashs 0x887A0006, update 2.5 et modpack Perfect City](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_Cyberpunk2077_suivi.md) (Kai)
+- [DLSS 5 Launcher](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/dlss5/launcher/README.md) (Claude) — le programme d'installation en un clic, son code et son historique
+- [Analyse des crashs — DLSS 5 Neural Rendering](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/dlss5/docs/analyse-crashs.md) (Claude)
+- [DLSS 5 — observations personnelles par jeu (RTX 4070)](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/chatgpt/dlss5/docs/DLSS5_OBSERVATIONS_PAR_JEU.md) (ChatGPT)
+
+**Homelab**
+- [Plan de relance du homelab](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/homelab/docs/PLAN_RELANCE_HOMELAB.md) (Kai) et [le journal de sa réalisation](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/homelab/docs/RELANCE_2026-10-26.md)
+- [Recycler un vieux portable en homelab Debian : installation et services](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/homelab/guides/installation-et-services.md) (Claude)
+
+**Tournoi MUGEN**
+- [Roster du tournoi](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/mugen/docs/ROSTER_TOURNOI.md) (Kai)
+- [Guide technique — MUGEN (règles et pièges connus)](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/mugen/docs/GUIDE_TECHNIQUE.md) (Kai)
+
+**Mods de jeux**
+- [Cyberpsychose — document de design](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/mods/mods/cyberpsychose-cp2077/DESIGN.md) (Claude) — un mod Cyberpunk 2077 en conception
+- [Cyberpunk 2077 — journal d'investigation des crashs en environnement moddé](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/chatgpt/mods/docs/CYBERPUNK_2077_CRASHS_ENVIRONNEMENT_MODDE.md) (ChatGPT)
+
+**Veille OSINT**
+- [Agent de veille jeux vidéo — architecture](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/veille-osint/docs/ARCHITECTURE.md) (Kai)
+- [Agent de veille OSINT jeu vidéo (Python + API Gemini)](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/osint/agent-veille-jeux/README.md) (Claude)
+
+**Soutien informatique**
+- [Kit de dépannage — atelier de réparation](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/soutien-it/docs/KIT_DEPANNAGE.md) (Kai)
+- [Modèle de fiche d'intervention — atelier de réparation](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/soutien-it/docs/FICHE_INTERVENTION.md) (Kai)
+
+**Transverse**
+- [Environnement Matériel & Système de Référence](HARDWARE_ENV.md) — la machine de référence utilisée pour les tests du dépôt
+
 ## Organisation
 
 La branche `main` ne contient pas de projet : elle sert d'accueil, de sommaire et de point
@@ -44,14 +79,14 @@ de départ. Le travail vit dans des branches par IA et par projet, au format
 
 | Projet | ChatGPT | Claude | Gemini | Kai |
 |---|---|---|---|---|
-| Mods de jeux | `ai/chatgpt/mods` | `ai/claude/mods` | `ai/gemini/mods` | `ai/kai/mods` |
-| Tournoi MUGEN | `ai/chatgpt/mugen` | `ai/claude/mugen` | `ai/gemini/mugen` | `ai/kai/mugen` |
-| Unreal Engine 5 | `ai/chatgpt/ue5` | `ai/claude/ue5` | `ai/gemini/ue5` | `ai/kai/ue5` |
-| DLSS 5 | `ai/chatgpt/dlss5` | `ai/claude/dlss5` | `ai/gemini/dlss5` | `ai/kai/dlss5` |
-| Linux et administration système | — | `ai/claude/linux` | — | — |
-| Veille OSINT | — | `ai/claude/osint` | — | `ai/kai/veille-osint` |
-| Homelab | — | `ai/claude/homelab` | — | `ai/kai/homelab` |
-| Soutien informatique | — | — | — | `ai/kai/soutien-it` |
+| Mods de jeux | [`ai/chatgpt/mods`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/mods) | [`ai/claude/mods`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/mods) | [`ai/gemini/mods`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/mods) | [`ai/kai/mods`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mods) |
+| Tournoi MUGEN | [`ai/chatgpt/mugen`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/mugen) | [`ai/claude/mugen`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/mugen) | [`ai/gemini/mugen`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/mugen) | [`ai/kai/mugen`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mugen) |
+| Unreal Engine 5 | [`ai/chatgpt/ue5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/ue5) | [`ai/claude/ue5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/ue5) | [`ai/gemini/ue5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/ue5) | [`ai/kai/ue5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/ue5) |
+| DLSS 5 | [`ai/chatgpt/dlss5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/chatgpt/dlss5) | [`ai/claude/dlss5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/dlss5) | [`ai/gemini/dlss5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/gemini/dlss5) | [`ai/kai/dlss5`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/dlss5) |
+| Linux et administration système | — | [`ai/claude/linux`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/linux) | — | — |
+| Veille OSINT | — | [`ai/claude/osint`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/osint) | — | [`ai/kai/veille-osint`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/veille-osint) |
+| Homelab | — | [`ai/claude/homelab`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/claude/homelab) | — | [`ai/kai/homelab`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/homelab) |
+| Soutien informatique | — | — | — | [`ai/kai/soutien-it`](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/soutien-it) |
 
 ## Règles de travail
 
