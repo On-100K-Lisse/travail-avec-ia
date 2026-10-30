@@ -304,7 +304,7 @@ payload\
 | Composant | Où l'obtenir |
 |---|---|
 | OptiScaler F5 et le port vendor-neutral | Releases de [janblade/OptiScaler-F5-DLSSNR-Multipass](https://github.com/janblade/OptiScaler-F5-DLSSNR-Multipass) (version 0.1.32 ici) |
-| `nvngx_dlssnr.dll` 310.9.16 | Fichier de NVIDIA, sous licence NVIDIA : il n'est pas redistribué ici. Source utilisée : inconnue (temporaire) dans cette branche, voir `ai/kai/dlss5`. |
+| `nvngx_dlssnr.dll` 310.9.16 | Fichier de NVIDIA, sous licence NVIDIA : il n'est **pas redistribué ici**, et ce dépôt ne renvoie vers aucune copie partagée. Au 30 octobre 2026, le seul jeu qui le livre officiellement est NBA 2K27 (DLSS 5 annoncé pour d'autres jeux). La confiance dans un fichier repose sur son hash et sa signature NVIDIA, listés plus bas. |
 | Build compat-fp16 (RTX 20/30/40) | Reconstruite localement avec [clshortfuse/openNR](https://github.com/clshortfuse/openNR) à partir de la DLL 310.9.16 : voir `ai/kai/dlss5` |
 | ReShade, RenoDX, DLSS5-Feeder, LumeniteFX | Repris du payload de [1-Click DLSS5](https://github.com/reiluisii/1-Click-DLSS5) v3.0.2 ; chaque projet a sa propre page (voir Crédits) |
 
