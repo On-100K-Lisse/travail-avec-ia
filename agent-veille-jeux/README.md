@@ -173,3 +173,7 @@ récapitulatif du vendredi à 17 h. **Le fuseau horaire du serveur doit être le
   `python-dotenv`, et le SDK officiel `google-genai` de Google.
 - Sources surveillées : leurs éditeurs respectifs (ESRB, PEGI, Valve/Steam, Reddit et les sites
   de nouvelles listés dans `sources.yaml`).
+
+---
+
+Retour : [README de la branche](../README.md) · [Accueil du dépôt](https://github.com/On-100K-Lisse/travail-avec-ia)
