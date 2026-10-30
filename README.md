@@ -13,7 +13,8 @@ Cette branche accueille la construction d'un **scaler graphique écrit à partir
 
 ## Documents
 
-- [Périmètre v1](docs/PERIMETRE_V1.md) — objectif, ce qui est inclus et exclu, ordre de construction en 6 étapes, règles du projet et critères « publiable ».
+- [Plan de structure](docs/PLAN_DE_STRUCTURE.md) — le plan de construction de Claude : règle d'or, neuf jalons, briques permises et leurs licences, risques. **C'est lui qui gouverne la construction.** Corrections de Kai appliquées et marquées dans le texte (30 octobre 2026).
+- [Périmètre v1](docs/PERIMETRE_V1.md) — le cadre du projet : objectif, ce qui est inclus et exclu, critères « publiable ». **Il gouverne le cadre** ; en cas de différence entre les deux documents, On-100-K-Lisse tranche.
 
 ## Organisation
 
