@@ -14,6 +14,15 @@ Née du DEP en soutien informatique et de l'atelier de réparation de l'école.
 
 Présentation du dépôt et des autres projets : voir le README de la branche `main`.
 
+## Navigation
+
+**Documents de cette branche :**
+
+- [Modèle de fiche d'intervention — atelier de réparation](docs/FICHE_INTERVENTION.md)
+- [Kit de dépannage — atelier de réparation](docs/KIT_DEPANNAGE.md)
+
+**Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
+
 ## Licence
 
 Documentation sous licence CC BY 4.0 (`LICENSE`), code sous licence MIT
