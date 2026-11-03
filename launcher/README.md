@@ -26,7 +26,7 @@ Petit programme Windows (une seule fenêtre, en français) qui :
 | **OptiScaler** | Un mod libre qui intercepte l'upscaler du jeu et peut y brancher le NR. |
 | **DLL proxy** | Une DLL placée à côté de l'exe du jeu sous un nom que le jeu charge de lui-même (`dxgi.dll`, `winmm.dll`, `version.dll`…). C'est comme ça que les mods se font charger. |
 | **Feeder** | Pour les jeux **sans** upscaler : le mod fabrique lui-même les infos de mouvement à partir de l'image (flux optique), pour « nourrir » le NR. |
-| **Preset A / B** | Les deux modèles NR de la DLL 310.9 : A = gros modèle, B = petit modèle, plus léger. Les deux ont été testés sur RTX 4070. Dans Species: Unknown, avec la même taille de modèle : ≈ 6,0 ms par image en Preset A, ≈ 3,9 ms en Preset B (voir le [journal des tests](../docs/journal-tests-2026-10-24.md)). |
+| **Preset A / B** | Les deux modèles NR de la DLL 310.9 : A = gros modèle, B = petit modèle, plus léger. Les deux ont été testés sur RTX 4070. Dans Species: Unknown, avec la même taille de modèle : ≈ 6,0 ms par image en Preset A (OptiScaler 0.1.32), ≈ 3,9 ms en Preset B (OptiScaler 0.1.34). Comparaison indicative, pas un A/B contrôlé (voir le [journal des tests](../docs/journal-tests-2026-10-24.md)). |
 | **Ray Reconstruction (RR)** | Débruiteur de NVIDIA pour le ray tracing. Quand il est actif, le NR doit tourner après lui. |
 | **Manifeste** | Le fichier où le launcher note chaque fichier qu'il ajoute ou remplace, pour pouvoir tout défaire. |
 
