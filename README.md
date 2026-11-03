@@ -27,3 +27,8 @@
 - [Kai — Mods de jeux](https://github.com/On-100K-Lisse/travail-avec-ia/tree/ai/kai/mods)
 
 **Accueil :** [Présentation du dépôt et sommaire (branche `main`)](https://github.com/On-100K-Lisse/travail-avec-ia) · [Méthode de travail multi-IA](https://github.com/On-100K-Lisse/travail-avec-ia/blob/main/docs/METHODE_TRAVAIL_MULTI_IA.md)
+
+## Licence
+
+Documentation sous licence CC BY 4.0 (`LICENSE`), code sous licence MIT
+(`LICENSE-MIT`).
