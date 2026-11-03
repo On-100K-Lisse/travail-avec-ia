@@ -23,20 +23,22 @@ aléatoire si V survit.
 
 ## État des frameworks pour la 2.5
 
-Vérifié le 2 novembre 2026, sur les dépôts officiels de chaque projet.
+Vérifié le 2 novembre 2026, sur les dépôts officiels de chaque projet : chaque version contient
+un commit qui annonce le support de la 2.5.
 
 | Framework | Première version qui supporte la 2.5 | Date |
 |---|---|---|
-| redscript | 0.5.32 | 22 octobre 2026 |
-| Cyber Engine Tweaks | 1.38.0 (1.38.1 ensuite) | 22 octobre 2026 |
-| RED4ext | 1.31.0 | 24 octobre 2026 |
-| TweakXL | 1.12.0 | 25 octobre 2026 |
-| ArchiveXL | 1.28.0 (1.28.6 ensuite) | 25 octobre 2026 |
-| Codeware | 1.21.0 (1.21.2 ensuite) | 25 octobre 2026 |
-| Native Settings UI (optionnel) | inconnu (temporaire) : pas de version 2.5 confirmée | — |
+| redscript | 0.5.32 (commit `392ede4`) | 22 octobre 2026 |
+| Cyber Engine Tweaks | 1.38.0 (commit `18ee7cb`; 1.38.1 ensuite) | 22 octobre 2026 |
+| RED4ext | 1.31.0 (commit `47ac01c`) | 24 octobre 2026 |
+| TweakXL | 1.12.0 (commit `0d13bb9`) | 25 octobre 2026 |
+| ArchiveXL | 1.28.0 (commit `bbceebe`; 1.28.6 ensuite) | 25 octobre 2026 |
+| Codeware | 1.21.0 (commit `b054150`; 1.21.2 ensuite) | 25 octobre 2026 |
+| Native Settings UI (optionnel) | inconnu (temporaire) : pas de support 2.5 annoncé (dernier commit le 22 octobre 2026) | — |
 
-Ces versions évoluent vite après un patch : toujours prendre la plus récente au moment
-d'installer.
+Des frameworks disponibles ne veulent pas dire que le mod est prêt : il faudra quand même tester
+chaque phase en jeu. Ces versions évoluent vite après un patch : toujours prendre la plus récente
+au moment d'installer.
 
 ## Plan de développement
 
@@ -59,7 +61,7 @@ eux pour vérifier qu'il démarre.
   - RED4ext : WopsS;
   - redscript : jac3km4;
   - TweakXL, ArchiveXL et Codeware : psiberx;
-  - Native Settings UI : justarandomguyintheinternet.
+  - Native Settings UI : keanuWheeze (compte GitHub justarandomguyintheinternet).
 - Concept du mod : On-100-K-Lisse. Document de design : Claude.
 
 ---

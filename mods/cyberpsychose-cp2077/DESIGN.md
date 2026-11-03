@@ -117,8 +117,9 @@ qu'aux catégories liées aux attributs dominants, et les debuffs viennent des a
 | Sang-froid | Pistolets, revolvers, fusils de précision, couteaux de lancer | Discrétion : détection 2× plus rapide, accroupi bruyant, pas d'exécution silencieuse |
 
 Une arme qui tombe dans deux catégories boostées prend le meilleur multiplicateur, sans cumul.
-La 2.5 ajoute une perk de Sang-froid pour tenir un pistolet ou un revolver dans chaque main :
-les deux armes restent dans la catégorie Sang-froid.
+La 2.5 ajoute la perk de Sang-froid « Double Trouble », qui permet de tenir deux pistolets ou
+revolvers de type Puissance (pas les versions Tech ni intelligentes) : les deux armes restent
+dans la catégorie Sang-froid.
 
 ### Exemples
 
