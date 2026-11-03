@@ -37,7 +37,8 @@ est dans `HARDWARE_ENV.md` sur `main`.
    tenu 2 h 36 d'affilée.
 2. **Le Preset A coûte cher.** Il a été choisi à la main dans le menu du jeu lors de plusieurs
    sessions. À pleine résolution, il coûte ≈ 12 ms. Pour comparer, le Preset B à 1705×960 coûtait
-   ~3,5 ms dans le test 03 du 19 octobre (branche `ai/kai/dlss5`). C'est ce qui a motivé l'affichage
+   ~3,5 ms dans le test 03 du 19 octobre (branche `ai/kai/dlss5`) : un autre jeu et une taille de
+   modèle plus petite, donc un ordre de grandeur, pas une mesure comparable. C'est ce qui a motivé l'affichage
    du coût réel dans le launcher, et les préréglages orientés FPS.
 3. **Le menu du jeu peut écraser les réglages du launcher.** Dans Life is Strange, l'INI final
    contenait `WorkingScale=auto` (donc 1,0) au lieu du 0,67 posé par le launcher : l'INI avait été

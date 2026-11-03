@@ -57,7 +57,8 @@ listées dans l'ordre où elles ont été livrées, avec ce qui a déclenché ch
 ## 6. Personnalisation, FPS — 24 oct.
 
 - Constat dans les logs : NR à ≈ 12,1 ms par image en Preset A à pleine résolution (2560×1440).
-  Pour comparer, le test 03 coûtait ~3,5 ms en Preset B.
+  Pour comparer, le test 03 coûtait ~3,5 ms en Preset B, dans un autre jeu et avec un modèle plus
+  petit (1705×960) : un ordre de grandeur, pas une mesure comparable.
 - Ajouts :
   - **profils par jeu**, et « Importer depuis le jeu » ;
   - génération d'images **XeFG / FSR FG**, limite de FPS, Reflex Boost, compression des bords ;

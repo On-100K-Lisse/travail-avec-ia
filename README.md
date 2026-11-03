@@ -7,7 +7,7 @@ apprises.
 
 > **Neural Rendering (NR)**, aussi appelé « DLSS 5 » dans la communauté : un modèle d'IA de NVIDIA
 > (le fichier `nvngx_dlssnr.dll`) qui retouche l'image d'un jeu (éclairage, détail, couleur).
-> Il n'est pas encore intégré officiellement aux jeux. Des mods comme OptiScaler permettent de
+> Au 30 octobre 2026, un seul jeu l'intègre officiellement (NBA 2K27). Des mods comme OptiScaler permettent de
 > l'« injecter » dans des jeux existants. Ce dépôt ne contient aucun de ces fichiers : seulement
 > notre code et notre documentation.
 

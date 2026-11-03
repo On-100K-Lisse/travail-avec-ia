@@ -2,7 +2,7 @@
 
 Petit programme Windows (une seule fenêtre, en français) qui :
 
-1. **scanne** les jeux installés (Steam, Epic, GOG, plus des dossiers ajoutés à la main) ;
+1. **scanne** les jeux installés (Steam, Epic, GOG, Xbox / Game Pass, plus des dossiers ajoutés à la main) ;
 2. dit pour chaque jeu **si et comment** DLSS 5 Neural Rendering peut y être injecté ;
 3. **installe** l'effet en un clic ;
 4. **remet le dossier du jeu exactement comme avant** en un clic, même si un autre outil l'avait
@@ -384,7 +384,9 @@ passe minuit, crash, doublons, comparaison Preset A / B, reprise des journaux) e
 (étape active au bon moment, les quatre verdicts, ancien `historique.csv` toujours lisible),
 versions d'OptiScaler (installation, réglages, historique, reset), scan Xbox (`.GamingRoot`,
 `MicrosoftGame.config`, dossier protégé) et conseils. La partie surveillée dépend de Windows et
-n'a été essayée que dans une fenêtre de test sous Linux, puis sous Windows par On-100-K-Lisse. Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
+n'a été essayée que dans une fenêtre de test sous Linux, puis sous Windows par On-100-K-Lisse.
+
+Lancement (Mono), depuis un dossier qui contient un `payload\` factice :
 
 ```sh
 mcs -langversion:5 -out:test.exe tests/Test.cs src/Core.cs src/Install.cs src/Cleaner.cs src/Doctor.cs src/History.cs   # + les -r: ci-dessus
@@ -423,7 +425,7 @@ de l'utilisateur, ou lit leurs fichiers de configuration. Chacun garde sa licenc
 | [OptiScaler_DLSSNR](https://github.com/Dagherbou/OptiScaler_DLSSNR) | Dagherbou | voir le projet |
 | OptiScaler-DLSSNR-PreSR-Multipass | wilsjo2 | voir le projet |
 | [OptiScaler-F5-DLSSNR-Multipass](https://github.com/janblade/OptiScaler-F5-DLSSNR-Multipass) (dont Optical F5Low et le port vendor-neutral) | janblade | GPL-3.0 (fichier LICENSE du package) |
-| [openNR](https://github.com/clshortfuse/openNR) (build compat-fp16) et [RenoDX](https://github.com/clshortfuse/renodx) | clshortfuse (ShortFuse) | openNR : MIT ; RenoDX : voir le projet |
+| [openNR](https://github.com/clshortfuse/openNR) (build compat-fp16) et [RenoDX](https://github.com/clshortfuse/renodx) | clshortfuse (ShortFuse) | MIT (les deux) |
 | [ReShade](https://github.com/crosire/reshade) | crosire | BSD-3-Clause |
 | [DLSS5-Feeder](https://github.com/jlrouzies-fr/DLSS5-Feeder) | jlrouzies-fr (le README du 1-Click nomme aussi NIGos) | MIT |
 | [LumeniteFX](https://github.com/umar-afzaal/LumeniteFX) (shaders du Feeder ReShade) | umar-afzaal | Tous droits réservés : ses fichiers ne sont pas publiés ici |
