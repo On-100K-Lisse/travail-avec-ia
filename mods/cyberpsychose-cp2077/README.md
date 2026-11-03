@@ -19,7 +19,7 @@ aléatoire si V survit.
 - TweakXL — effets de statut (buffs, debuffs, tremblements)
 - ArchiveXL — ressources ajoutées (texto de Viktor)
 - [Codeware](https://www.nexusmods.com/cyberpunk2077/mods/7780) — utilitaires (spawn des hallucinations)
-- Native Settings UI (optionnel) — menu de réglages en jeu
+- [Native Settings UI](https://www.nexusmods.com/cyberpunk2077/mods/3518) (optionnel) — menu de réglages en jeu
 
 ## État des frameworks pour la 2.5
 
@@ -33,7 +33,7 @@ Vérifié le 2 novembre 2026, sur les dépôts officiels de chaque projet.
 | TweakXL | 1.12.0 | 25 octobre 2026 |
 | ArchiveXL | 1.28.0 (1.28.6 ensuite) | 25 octobre 2026 |
 | Codeware | 1.21.0 (1.21.2 ensuite) | 25 octobre 2026 |
-| Native Settings UI (optionnel) | inconnu (temporaire) | — |
+| Native Settings UI (optionnel) | inconnu (temporaire) : pas de version 2.5 confirmée | — |
 
 Ces versions évoluent vite après un patch : toujours prendre la plus récente au moment
 d'installer.
@@ -59,7 +59,7 @@ eux pour vérifier qu'il démarre.
   - RED4ext : WopsS;
   - redscript : jac3km4;
   - TweakXL, ArchiveXL et Codeware : psiberx;
-  - Native Settings UI : auteur inconnu (temporaire).
+  - Native Settings UI : justarandomguyintheinternet.
 - Concept du mod : On-100-K-Lisse. Document de design : Claude.
 
 ---

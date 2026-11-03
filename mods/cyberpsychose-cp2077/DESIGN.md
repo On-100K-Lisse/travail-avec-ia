@@ -89,7 +89,8 @@ Intelligence, Sang-froid) :
 - le niveau de l'attribut, de 3 à 20;
 - le nombre de perks débloqués dans son arbre.
 
-Les seuils suivent ceux du jeu, où les paliers de perks s'ouvrent à 9, 15 et 20 :
+Les seuils suivent ceux du jeu, où les paliers de perks s'ouvrent à 4, 9, 15 et 20. Le mod se
+sert des trois derniers :
 
 | Rang | Condition | Effet pendant la crise |
 |---|---|---|
@@ -116,6 +117,8 @@ qu'aux catégories liées aux attributs dominants, et les debuffs viennent des a
 | Sang-froid | Pistolets, revolvers, fusils de précision, couteaux de lancer | Discrétion : détection 2× plus rapide, accroupi bruyant, pas d'exécution silencieuse |
 
 Une arme qui tombe dans deux catégories boostées prend le meilleur multiplicateur, sans cumul.
+La 2.5 ajoute une perk de Sang-froid pour tenir un pistolet ou un revolver dans chaque main :
+les deux armes restent dans la catégorie Sang-froid.
 
 ### Exemples
 
