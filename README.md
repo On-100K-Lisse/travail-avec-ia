@@ -5,7 +5,7 @@ sont dans le dossier [`mods/`](mods/), un sous-dossier par mod.
 
 | Mod | Jeu | État |
 |---|---|---|
-| [Cyberpsychose](mods/cyberpsychose-cp2077/) | Cyberpunk 2077 (2.5) | Design en cours — en attente des frameworks 2.5 |
+| [Cyberpsychose](mods/cyberpsychose-cp2077/) | Cyberpunk 2077 (2.5) | Design en cours — frameworks 2.5 disponibles (état au 2 novembre 2026) |
 
 L'index détaillé et la méthode de travail sont dans [`mods/README.md`](mods/README.md).
 

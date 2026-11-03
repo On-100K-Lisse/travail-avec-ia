@@ -1,12 +1,13 @@
 # Cyberpsychose — document de design
 
-Dernière mise à jour : 23 octobre 2026.
+Dernière mise à jour : 2 novembre 2026.
 
 ## Vue d'ensemble
 
 Le mod fait vivre à V une vraie cyberpsychose. Une jauge de stress monte par paliers, un
 avertissement prévient, puis la crise éclate avec des effets adaptés au build. Si V survit, il se
-réveille ailleurs. La cible est la version 2.5 du jeu, dès que les frameworks seront à jour.
+réveille ailleurs. La cible est la version 2.5 du jeu. Au 2 novembre 2026, les frameworks requis la supportent
+(détail dans le [README](README.md#état-des-frameworks-pour-la-25)).
 
 ```mermaid
 flowchart LR
@@ -171,8 +172,8 @@ Idée bonus : un texto de Viktor au réveil, genre « T'as encore pété un câb
 
 ## Faisabilité technique
 
-Tout est faisable avec CET, redscript, TweakXL et Codeware une fois qu'ils seront à jour pour la
-2.5. La perte de contrôle reste le gros morceau à tester.
+Tout est faisable avec CET, redscript, TweakXL et Codeware, qui supportent la 2.5 depuis fin
+octobre 2026. La perte de contrôle reste le gros morceau à tester.
 
 | Feature | Difficulté | Outil | Approche |
 |---|---|---|---|

@@ -9,7 +9,7 @@ dossier avec son document de design, puis son code une fois qu'il est écrit.
 
 | Mod | Jeu | État | Dossier |
 |---|---|---|---|
-| Cyberpsychose | Cyberpunk 2077 (2.5) | Design en cours — en attente des frameworks 2.5 | [`cyberpsychose-cp2077/`](cyberpsychose-cp2077/) |
+| Cyberpsychose | Cyberpunk 2077 (2.5) | Design en cours — frameworks 2.5 disponibles (état au 2 novembre 2026) | [`cyberpsychose-cp2077/`](cyberpsychose-cp2077/) |
 
 ## Organisation d'un dossier de mod
 

@@ -8,7 +8,7 @@ aléatoire si V survit.
 | | |
 |---|---|
 | **Version du jeu visée** | 2.5 (Edgerunners 2 Update, sortie le 22 octobre 2026) |
-| **État** | Design en cours. Le code attend la mise à jour des frameworks pour la 2.5. |
+| **État** | Design en cours. Au 2 novembre 2026, les frameworks requis supportent la 2.5 (voir [État des frameworks](#état-des-frameworks-pour-la-25)); le code n'est pas encore commencé. |
 | **Design complet** | [`DESIGN.md`](DESIGN.md) |
 
 ## Prérequis prévus
@@ -20,6 +20,23 @@ aléatoire si V survit.
 - ArchiveXL — ressources ajoutées (texto de Viktor)
 - [Codeware](https://www.nexusmods.com/cyberpunk2077/mods/7780) — utilitaires (spawn des hallucinations)
 - Native Settings UI (optionnel) — menu de réglages en jeu
+
+## État des frameworks pour la 2.5
+
+Vérifié le 2 novembre 2026, sur les dépôts officiels de chaque projet.
+
+| Framework | Première version qui supporte la 2.5 | Date |
+|---|---|---|
+| redscript | 0.5.32 | 22 octobre 2026 |
+| Cyber Engine Tweaks | 1.38.0 (1.38.1 ensuite) | 22 octobre 2026 |
+| RED4ext | 1.31.0 | 24 octobre 2026 |
+| TweakXL | 1.12.0 | 25 octobre 2026 |
+| ArchiveXL | 1.28.0 (1.28.6 ensuite) | 25 octobre 2026 |
+| Codeware | 1.21.0 (1.21.2 ensuite) | 25 octobre 2026 |
+| Native Settings UI (optionnel) | inconnu (temporaire) | — |
+
+Ces versions évoluent vite après un patch : toujours prendre la plus récente au moment
+d'installer.
 
 ## Plan de développement
 
