@@ -16,7 +16,7 @@ ouvertes » : on n'utilise que de l'information publique.
 | Élément | État |
 |---|---|
 | Code (27 fichiers) | Écrit et testé hors ligne (sans réseau ni clé d'API) |
-| Déploiement sur le serveur | Inconnu (temporaire) |
+| Déploiement sur le serveur | Jamais déployé (état vérifié le 26 octobre 2026) |
 | Code source dans ce dépôt | Pas encore : seul ce document de conception est publié pour l'instant |
 
 ## Les deux niveaux de surveillance
