@@ -1,6 +1,6 @@
 # Passation du scaler maison — de ChatGPT à Claude
 
-**Rédigé par Kai, le 1er novembre 2026**, à la demande d'On-100-K-Lisse, à partir de la lecture intégrale de la conversation partagée ChatGPT « Préparer le projet Scaler » (session du 31 octobre 2026, ~21 h → minuit, heure de Toronto).
+**Rédigé par Kai, le 1er novembre 2026**, à la demande d'On-100-K-Lisse, à partir de la lecture intégrale de la conversation partagée ChatGPT « Préparer le projet Scaler » (session du 31 octobre 2026, ~21 h → minuit, heure locale).
 
 **Pourquoi cette passation :** On-100-K-Lisse a épuisé ses crédits d'utilisation ChatGPT. Claude reprend le rôle de bâtisseur du code du scaler. On-100-K-Lisse reste, comme toujours, le décideur et le seul validateur en jeu.
 
