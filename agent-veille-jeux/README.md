@@ -16,7 +16,7 @@ ouvertes » : on n'utilise que de l'information publique.
 | Élément | État |
 |---|---|
 | Code (27 fichiers) | Écrit et testé hors ligne (sans réseau ni clé d'API) |
-| Déploiement sur le serveur | Jamais déployé (état vérifié le 26 octobre 2026) |
+| Déploiement sur le serveur | Déployé sur le Dell (Debian 13) le 2026-11-04 au soir ; test d'acceptation `veille-kai health` réussi le 2026-11-05 ; en rodage, alertes livrées par Kai, courriel désactivé (état vérifié le 2026-11-06) |
 | Code source dans ce dépôt | Pas encore : seul ce document de conception est publié pour l'instant |
 
 ## Les deux niveaux de surveillance
