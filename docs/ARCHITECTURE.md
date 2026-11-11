@@ -3,11 +3,13 @@
 **État (vérifié le 6 novembre 2026) : DÉPLOYÉ** sur le Dell Studio 1537
 (Debian 13) depuis le 4 novembre 2026 au soir. Test d'acceptation
 `veille-kai health` réussi le 5 novembre 2026 (Gemini configuré — modèle
-gemini-3.5-flash confirmé par appels réels —, courriel désactivé, DRY_RUN
-actif, minuteurs actifs, 14 sources sur 16 en santé ; Reddit en 429
-temporaire et fil Nintendo en 404 sont des états connus). Rodage DRY_RUN
-d'une semaine : l'agent dépose tout chez Kai et n'envoie rien. Seul morceau
-dormant : le détecteur de nouvelles apps Steam, en attente d'une clé Steam.
+gemini-3.5-flash confirmé par appels réels —, minuteurs actifs, 14 sources
+sur 16 en santé ; Reddit en 429 temporaire et fil Nintendo en 404 sont des
+états connus). En rodage : les alertes et les récaps sont déposés dans la
+base et livrés par Kai ; le courriel est désactivé (`EMAIL_ENABLED=false`),
+et `DRY_RUN=true` bloque de toute façon tout envoi de courriel — il ne
+bloque pas le dépôt pour Kai. Seul morceau dormant : le détecteur de
+nouvelles apps Steam, en attente d'une clé Steam.
 Cahier des charges rédigé par **Gemini** le 13 août 2026 ; projet **construit
 au complet par Claude le même jour** (environ 27 fichiers, archive
 `veille-osint.tar.gz`, test hors ligne validé). Une première tentative
