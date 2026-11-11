@@ -1,10 +1,18 @@
 # Agent de veille jeux vidéo — architecture
 
-**État (vérifié le 26 octobre 2026) :** cahier des charges rédigé par **Gemini**
-le 13 août 2026 ; projet **construit au complet par Claude le même jour**
-(environ 27 fichiers, archive `veille-osint.tar.gz`, test hors ligne validé).
-**Jamais déployé** : l'installation sur le portable Debian s'est arrêtée à
-l'étape 1, le mot de passe d'application Gmail — l'agent n'a jamais tourné.
+**État (vérifié le 6 novembre 2026) : DÉPLOYÉ** sur le Dell Studio 1537
+(Debian 13) depuis le 4 novembre 2026 au soir. Test d'acceptation
+`veille-kai health` réussi le 5 novembre 2026 (Gemini configuré — modèle
+gemini-3.5-flash confirmé par appels réels —, courriel désactivé, DRY_RUN
+actif, minuteurs actifs, 14 sources sur 16 en santé ; Reddit en 429
+temporaire et fil Nintendo en 404 sont des états connus). Rodage DRY_RUN
+d'une semaine : l'agent dépose tout chez Kai et n'envoie rien. Seul morceau
+dormant : le détecteur de nouvelles apps Steam, en attente d'une clé Steam.
+Cahier des charges rédigé par **Gemini** le 13 août 2026 ; projet **construit
+au complet par Claude le même jour** (environ 27 fichiers, archive
+`veille-osint.tar.gz`, test hors ligne validé). Une première tentative
+d'installation sur le portable Debian, en août 2026, s'était arrêtée à
+l'étape 1, le mot de passe d'application Gmail.
 Histoire reconstituée et vérifiée le 26 octobre 2026 à partir des conversations
 partagées de Claude et de Gemini.
 **Mise à jour v2 (26 octobre 2026) :** Claude a récupéré le code d'août (ses
@@ -14,8 +22,9 @@ attente, accusés de livraison, recherche, santé) ; courriel devenu facultatif
 et désactivé par défaut ; santé des sources dans le rapport du vendredi ;
 volet animés actif (AniList, Anime News Network, r/AnimeDubs) ; filtre
 anti-spoiler GTA 6 en deux couches et directive de légalité appliquée dès le
-préfiltre. **84 vérifications hors ligne passent.** Pas encore déployée —
-les vraies sources se valideront sur le Dell. Détails : `CHANGELOG.md` du
+préfiltre. **84 vérifications hors ligne passent toujours** ; les vraies
+sources ont été validées sur le Dell lors du déploiement (voir l'état
+ci-dessus). Détails : `CHANGELOG.md` du
 projet de l'agent (v2). Les backends PSN/Xbox, les métadonnées Crunchyroll /
 ADN / Netflix et les CV de comédiens de doublage restent **hors périmètre**
 à ce jour (décision consignée dans le README et `sources.yaml` de l'agent).
@@ -101,10 +110,10 @@ initial en veille hybride et précise les cibles et les règles.
 
 ## Où ça roule
 
-L'agent est destiné au **portable Debian** d'On-100-K-Lisse — une machine
-secondaire, toujours disponible, qui ne monopolise pas le PC principal. Le plan
-de relance du homelab (branche `ai/kai/homelab`) prévoit aussi de pouvoir
-l'héberger sur le serveur Dell à terme.
+L'agent roule sur le **serveur Dell** (Debian 13) d'On-100-K-Lisse depuis le
+4 novembre 2026 — une machine secondaire, toujours disponible, qui ne
+monopolise pas le PC principal. C'est l'hébergement que le plan de relance du
+homelab (branche `ai/kai/homelab`) prévoyait à terme.
 
 ## Les choix de conception
 
