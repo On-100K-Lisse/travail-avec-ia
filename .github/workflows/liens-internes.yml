@@ -1,0 +1,30 @@
+# Vérification des liens INTERNES du dépôt.
+# Objectif : attraper un lien brisé entre nos propres documents
+# (fichier renommé ou déplacé) dès le push, avant qu'un lecteur tombe dessus.
+# Mode « hors ligne » : aucun site externe n'est visité, donc le résultat
+# est stable — pas de faux échecs à cause d'un site lent ou qui bloque les robots.
+
+name: Liens internes
+
+# Déclencheurs : chaque push et chaque demande de fusion (PR).
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  liens-internes:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Récupérer le contenu de la branche.
+      - uses: actions/checkout@v4
+
+      # 2. Vérifier les liens locaux dans tous les fichiers Markdown.
+      #    fail: true = le crochet devient rouge si un lien interne est brisé.
+      - name: Vérifier les liens internes (lychee, hors ligne)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress './**/*.md'
+          fail: true
