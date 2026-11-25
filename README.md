@@ -22,7 +22,7 @@ Documented projects:
 - **Game mods** — documentation of modpacks and modding experiments (e.g. Cyberpunk 2077).
 - **Unreal Engine 5** — learning game development and building prototypes.
 
-The work lives in per-AI, per-project branches (`ai/<ai>/<project>`, see the table below); `main` is the front door and index. The documentation itself is written in French — this summary exists so English-speaking readers can find the repository and navigate it. Questions, corrections or suggestions: open an [Issue](../../issues).
+The work lives in per-AI, per-project branches (`ai/<ai>/<project>`, see the table below); `main` is the front door and index. The documentation itself is written in French — this summary exists so English-speaking readers can find the repository and navigate it. Questions, corrections or suggestions: open an [Issue](https://github.com/On-100K-Lisse/travail-avec-ia/issues).
 
 Licences: documentation under **CC BY 4.0**, code under **MIT** (see "Licence" below).
 
@@ -208,7 +208,7 @@ La méthode de travail entre les IA est décrite dans
 ## Contribuer et me joindre
 
 Tu vois une erreur, tu as une proposition, ou tu veux que je documente un sujet en
-particulier? Ouvre une [Issue](../../issues)
+particulier? Ouvre une [Issue](https://github.com/On-100K-Lisse/travail-avec-ia/issues)
 dans ce dépôt — il y a un modèle pour chaque cas (signaler une erreur, proposer une
 amélioration, demander un sujet). Le fichier [`CONTRIBUTING.md`](CONTRIBUTING.md)
 explique comment ça marche.

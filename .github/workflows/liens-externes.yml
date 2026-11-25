@@ -1,0 +1,40 @@
+# Vérification des liens EXTERNES (sites web cités dans la documentation).
+# Passage planifié seulement : ces vérifications dépendent de sites tiers,
+# donc elles ne doivent jamais bloquer un push.
+# Le rapport complet se lit dans le résumé du run (onglet Actions du dépôt).
+
+name: Liens externes (hebdomadaire)
+
+on:
+  # Tous les lundis à 14 h UTC (environ 9-10 h, heure de Toronto).
+  schedule:
+    - cron: '0 14 * * 1'
+  # Déclenchement manuel possible depuis l'onglet Actions.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  liens-externes:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Récupérer le contenu de la branche par défaut.
+      - uses: actions/checkout@v4
+
+      # 2. Visiter chaque lien externe des fichiers Markdown.
+      #    Codes acceptés en plus du 200 : 403 et 429 veulent souvent dire
+      #    « le site bloque les robots » ou « trop de demandes » — le lien
+      #    n'est pas mort pour autant.
+      #    fail: false = le run ne devient jamais rouge ; seul le rapport compte.
+      - name: Vérifier les liens externes (lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --accept 200,204,206,301,302,307,308,403,429 './**/*.md'
+          fail: false
+          output: ./rapport-liens.md
+
+      # 3. Le rapport reste visible dans le résumé du run.
+      - name: Publier le rapport dans le résumé du run
+        if: always()
+        run: cat ./rapport-liens.md >> "$GITHUB_STEP_SUMMARY"

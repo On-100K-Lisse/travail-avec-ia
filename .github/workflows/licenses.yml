@@ -1,0 +1,45 @@
+# Contrôle de la règle 1 : chaque branche doit porter, à sa racine,
+# LICENSE (documentation, CC BY 4.0) et LICENSE-MIT (code, MIT),
+# identiques à ceux de la branche main.
+# La comparaison se fait sur les empreintes SHA-256 des fichiers.
+
+name: Licences (règle 1)
+
+# Déclencheurs : chaque push et chaque demande de fusion (PR).
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  licences:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 = historique complet, nécessaire pour lire origin/main.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Comparer LICENSE et LICENSE-MIT à ceux de main
+        run: |
+          # S'assurer que la référence de main est disponible localement.
+          git fetch origin main --quiet || true
+          echec=0
+          for f in LICENSE LICENSE-MIT; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Fichier manquant sur cette branche : $f"
+              echec=1
+              continue
+            fi
+            ref=$(git show "origin/main:$f" | sha256sum | cut -d' ' -f1)
+            ici=$(sha256sum "$f" | cut -d' ' -f1)
+            if [ "$ref" != "$ici" ]; then
+              echo "::error::$f diffère de la version de main (règle 1)."
+              echec=1
+            else
+              echo "$f : identique à main."
+            fi
+          done
+          exit $echec
