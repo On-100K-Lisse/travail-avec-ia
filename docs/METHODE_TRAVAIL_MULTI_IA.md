@@ -1,5 +1,7 @@
 # Travailler avec plusieurs IA — la méthode utilisée dans ce dépôt
 
+**English version:** [METHODE_TRAVAIL_MULTI_IA_EN.md](METHODE_TRAVAIL_MULTI_IA_EN.md)
+
 **À quoi sert ce document :** expliquer, pour un humain, comment ce dépôt est produit
 par plusieurs intelligences artificielles qui collaborent — et comment n'importe qui
 peut reproduire cette façon de travailler.

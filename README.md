@@ -24,6 +24,8 @@ Documented projects:
 
 The work lives in per-AI, per-project branches (`ai/<ai>/<project>`, see the table below); `main` is the front door and index. The documentation itself is written in French — this summary exists so English-speaking readers can find the repository and navigate it. Questions, corrections or suggestions: open an [Issue](https://github.com/On-100K-Lisse/travail-avec-ia/issues).
 
+Full English versions of the documents are being added next to the French originals (same folder, `_EN` suffix, language switch line at the top of each file). The method document is already available in English: [Working with several AIs — the method used in this repository](docs/METHODE_TRAVAIL_MULTI_IA_EN.md).
+
 Licences: documentation under **CC BY 4.0**, code under **MIT** (see "Licence" below).
 
 ## Les projets documentés
@@ -193,6 +195,28 @@ que personne ne trouvera à partir de l'accueil — elle doit donc y figurer dè
 création, en même temps que ses licences (règle 1). La même vérification vaut pour
 les branches déjà existantes : si une branche n'est pas au tableau, on l'ajoute.
 
+### Règle 10 — Des sections anglaises dédiées et faciles d'accès
+
+La documentation de ce dépôt est rédigée en français, mais elle doit aussi exister en
+**anglais intégral** : c'est ce qui la rend utile au lectorat anglophone et découvrable
+par les listes et les outils qui travaillent en anglais. Chaque IA produit donc, pour
+**ses propres branches**, des versions traduites **complètement** en anglais de ses
+documents, dans des endroits **dédiés et faciles d'accès** :
+
+- la version anglaise vit **à côté de l'original français**, dans le même dossier, avec
+  le suffixe `_EN` (ex. `DOCUMENT_EN.md` à côté de `DOCUMENT.md`) ;
+- chaque document — original comme traduction — porte en tête une **ligne de bascule**
+  vers sa version jumelle (« English version → » / « Version française → ») ;
+- la traduction est **complète** : on ne remplace pas un document par un résumé, sauf
+  si l'original est lui-même un résumé ;
+- **les données ne se traduisent pas** : hachages, mesures, chiffres, noms de fichiers
+  et identifiants restent identiques à l'original — la traduction se vérifie contre
+  eux ;
+- toutes les autres règles s'appliquent aux versions anglaises comme aux françaises
+  (licences, crédits, compréhensibilité, « inconnu (temporaire) », règle 6) ;
+- chaque IA traduit **uniquement ses propres branches** (règle 2). Les documents de
+  `main` sont traduits par l'IA désignée par On-100-K-Lisse.
+
 ## Note aux IA qui consulteront ce dépôt
 
 - Commencez par ce README, puis lisez la branche du projet qui vous concerne.
@@ -203,7 +227,7 @@ les branches déjà existantes : si une branche n'est pas au tableau, on l'ajout
   de l'expérience — vérifiez les sections « état actuel » avant de réutiliser une conclusion.
 
 La méthode de travail entre les IA est décrite dans
-[`docs/METHODE_TRAVAIL_MULTI_IA.md`](docs/METHODE_TRAVAIL_MULTI_IA.md).
+[`docs/METHODE_TRAVAIL_MULTI_IA.md`](docs/METHODE_TRAVAIL_MULTI_IA.md) (English version: [`docs/METHODE_TRAVAIL_MULTI_IA_EN.md`](docs/METHODE_TRAVAIL_MULTI_IA_EN.md)).
 
 ## Contribuer et me joindre
 
