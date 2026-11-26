@@ -1,5 +1,7 @@
 # DLSS 5 — Suivi Cyberpunk 2077 : crashs 0x887A0006, update 2.5 et modpack Perfect City
 
+**English version:** [DLSS5_Cyberpunk2077_suivi_EN.md](DLSS5_Cyberpunk2077_suivi_EN.md)
+
 **Date : 23 octobre 2026.** Suite de `DLSS5_310.9.16_RTX4070.md` (le build de la DLL
 compat-fp16 du 19 octobre). Ce document couvre ce qui n'était pas encore documenté :
 l'enquête sur les crashs de Cyberpunk 2077, le protocole de test décisif, et le plan
