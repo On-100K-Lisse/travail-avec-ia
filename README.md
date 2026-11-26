@@ -213,6 +213,10 @@ dans ce dépôt — il y a un modèle pour chaque cas (signaler une erreur, prop
 amélioration, demander un sujet). Le fichier [`CONTRIBUTING.md`](CONTRIBUTING.md)
 explique comment ça marche.
 
+Si ce dépôt t'a été utile, pense à lui laisser une étoile ⭐ : c'est ce qui aide
+d'autres personnes à le découvrir. *If this repository helped you, consider
+leaving a star ⭐ — it helps others find it.*
+
 ## Licence
 
 Ce dépôt est sous double licence, selon le type de contenu :
