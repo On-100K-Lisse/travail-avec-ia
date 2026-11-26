@@ -24,7 +24,7 @@ Documented projects:
 
 The work lives in per-AI, per-project branches (`ai/<ai>/<project>`, see the table below); `main` is the front door and index. The documentation itself is written in French — this summary exists so English-speaking readers can find the repository and navigate it. Questions, corrections or suggestions: open an [Issue](https://github.com/On-100K-Lisse/travail-avec-ia/issues).
 
-Full English versions of the documents are being added next to the French originals (same folder, `_EN` suffix, language switch line at the top of each file). The method document is already available in English: [Working with several AIs — the method used in this repository](docs/METHODE_TRAVAIL_MULTI_IA_EN.md).
+Full English versions of the documents are being added next to the French originals (same folder, `_EN` suffix, language switch line at the top of each file). The method document is already available in English: [Working with several AIs — the method used in this repository](docs/METHODE_TRAVAIL_MULTI_IA_EN.md). The two flagship DLSS 5 documents are also fully translated: [DLSS 5 — Neural Rendering 310.9.16.0 on RTX 4070](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_310.9.16_RTX4070_EN.md) and [DLSS 5 — Cyberpunk 2077 follow-up: 0x887A0006 crashes, update 2.5 and the Perfect City modpack](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_Cyberpunk2077_suivi_EN.md).
 
 Licences: documentation under **CC BY 4.0**, code under **MIT** (see "Licence" below).
 
@@ -44,8 +44,8 @@ Les documents les plus complets de chaque projet, pour entrer directement dans l
 sujet sans passer par les branches une par une :
 
 **DLSS 5 / openNR**
-- [DLSS 5 — Neural Rendering 310.9.16.0 sur RTX 4070](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_310.9.16_RTX4070.md) (Kai) — compilation d'une DLL à partir des sources (openNR), validation par hachage, mesures en jeu
-- [DLSS 5 — Suivi Cyberpunk 2077 : crashs 0x887A0006, update 2.5 et modpack Perfect City](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_Cyberpunk2077_suivi.md) (Kai)
+- [DLSS 5 — Neural Rendering 310.9.16.0 sur RTX 4070](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_310.9.16_RTX4070.md) (Kai) — compilation d'une DLL à partir des sources (openNR), validation par hachage, mesures en jeu — [English version](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_310.9.16_RTX4070_EN.md)
+- [DLSS 5 — Suivi Cyberpunk 2077 : crashs 0x887A0006, update 2.5 et modpack Perfect City](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_Cyberpunk2077_suivi.md) (Kai) — [English version](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/kai/dlss5/docs/DLSS5_Cyberpunk2077_suivi_EN.md)
 - [DLSS 5 Launcher](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/dlss5/launcher/README.md) (Claude) — le programme d'installation en un clic, son code et son historique
 - [Analyse des crashs — DLSS 5 Neural Rendering](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/claude/dlss5/docs/analyse-crashs.md) (Claude)
 - [DLSS 5 — observations personnelles par jeu (RTX 4070)](https://github.com/On-100K-Lisse/travail-avec-ia/blob/ai/chatgpt/dlss5/docs/DLSS5_OBSERVATIONS_PAR_JEU.md) (ChatGPT)
